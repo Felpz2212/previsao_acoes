@@ -1,0 +1,22 @@
+{
+  "symbol": "AAPL",
+  "trained_at": "2025-12-02T19:19:42.393944",
+  "sequence_length": 60,
+  "epochs": 50,
+  "batch_size": 32,
+  "learning_rate": 0.001,
+  "hidden_size": 50,
+  "num_layers": 2,
+  "dropout": 0.2,
+  "metrics": {
+    "mse": 54.99027104928138,
+    "rmse": 7.415542532362779,
+    "mae": 5.886578113049061,
+    "mape": 2.800838313811231,
+    "r2": 0.8888370382188046,
+    "directional_accuracy": 50.877192982456144,
+    "test_samples": 286
+  },
+  "model_path": "/Users/henriquebap/Pessoal/PosTech/previsao_acoes/models/lstm_model_AAPL.pth",
+  "scaler_path": "/Users/henriquebap/Pessoal/PosTech/previsao_acoes/models/scaler_AAPL.pkl"
+}

@@ -1,0 +1,22 @@
+{
+  "symbol": "GOOGL",
+  "trained_at": "2025-12-02T19:20:13.644164",
+  "sequence_length": 60,
+  "epochs": 50,
+  "batch_size": 32,
+  "learning_rate": 0.001,
+  "hidden_size": 50,
+  "num_layers": 2,
+  "dropout": 0.2,
+  "metrics": {
+    "mse": 66.67955208915937,
+    "rmse": 8.16575483890861,
+    "mae": 6.5092102530952936,
+    "mape": 3.949044763062278,
+    "r2": 0.7638018409196224,
+    "directional_accuracy": 52.98245614035088,
+    "test_samples": 286
+  },
+  "model_path": "/Users/henriquebap/Pessoal/PosTech/previsao_acoes/models/lstm_model_GOOGL.pth",
+  "scaler_path": "/Users/henriquebap/Pessoal/PosTech/previsao_acoes/models/scaler_GOOGL.pkl"
+}

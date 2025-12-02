@@ -22,6 +22,7 @@ class StockDataPreprocessor:
         """
         self.sequence_length = sequence_length
         self.scaler = MinMaxScaler(feature_range=(0, 1))
+        self.target_scaler = MinMaxScaler(feature_range=(0, 1))  # Separate scaler for target
         self.feature_columns = None
         self.target_column = 'close'
         
@@ -62,7 +63,7 @@ class StockDataPreprocessor:
         df['momentum'] = df['close'] - df['close'].shift(4)
         
         # Fill NaN values from rolling calculations
-        df = df.fillna(method='bfill').fillna(method='ffill')
+        df = df.bfill().ffill()
         
         return df
     
@@ -126,13 +127,16 @@ class StockDataPreprocessor:
         
         # Extract features and target
         features = df_processed[self.feature_columns].values
-        target = df_processed[self.target_column].values
+        target = df_processed[self.target_column].values.reshape(-1, 1)
         
         # Fit and transform features
         features_scaled = self.scaler.fit_transform(features)
         
+        # Fit and transform target
+        target_scaled = self.target_scaler.fit_transform(target).flatten()
+        
         # Create sequences
-        X, y = self.create_sequences(features_scaled, target)
+        X, y = self.create_sequences(features_scaled, target_scaled)
         
         logger.info(f"Created {len(X)} sequences with shape {X.shape}")
         
@@ -159,13 +163,16 @@ class StockDataPreprocessor:
         
         # Extract features and target
         features = df_processed[self.feature_columns].values
-        target = df_processed[self.target_column].values
+        target = df_processed[self.target_column].values.reshape(-1, 1)
         
         # Transform features
         features_scaled = self.scaler.transform(features)
         
+        # Transform target
+        target_scaled = self.target_scaler.transform(target).flatten()
+        
         # Create sequences
-        X, y = self.create_sequences(features_scaled, target)
+        X, y = self.create_sequences(features_scaled, target_scaled)
         
         return X, y, df_processed
     
@@ -214,19 +221,10 @@ class StockDataPreprocessor:
         Returns:
             Value in original scale
         """
-        # Create a dummy array with the same shape as feature columns
-        dummy = np.zeros((1, len(self.feature_columns)))
-        
-        # Find the index of 'close' column in feature_columns
-        close_idx = self.feature_columns.index('close')
-        
-        # Set the close value
-        dummy[0, close_idx] = scaled_value
-        
-        # Inverse transform
-        inverse = self.scaler.inverse_transform(dummy)
-        
-        return inverse[0, close_idx]
+        # Use the dedicated target scaler
+        scaled_array = np.array([[scaled_value]])
+        inverse = self.target_scaler.inverse_transform(scaled_array)
+        return inverse[0, 0]
     
     def save(self, path: Path):
         """
@@ -237,6 +235,7 @@ class StockDataPreprocessor:
         """
         state = {
             'scaler': self.scaler,
+            'target_scaler': self.target_scaler,
             'feature_columns': self.feature_columns,
             'sequence_length': self.sequence_length,
             'target_column': self.target_column
@@ -259,6 +258,7 @@ class StockDataPreprocessor:
         
         preprocessor = cls(sequence_length=state['sequence_length'])
         preprocessor.scaler = state['scaler']
+        preprocessor.target_scaler = state.get('target_scaler', MinMaxScaler())  # Backward compatibility
         preprocessor.feature_columns = state['feature_columns']
         preprocessor.target_column = state['target_column']
         

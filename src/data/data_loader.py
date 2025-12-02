@@ -59,7 +59,22 @@ class StockDataLoader:
             
             # Reset index to make date a column
             df = df.reset_index()
-            df = df.rename(columns={'date': 'timestamp'})
+            
+            # Handle different column names from yfinance versions
+            date_col = None
+            for col in ['Date', 'date', 'Datetime', 'datetime', 'index']:
+                if col in df.columns:
+                    date_col = col
+                    break
+            
+            if date_col:
+                df = df.rename(columns={date_col: 'timestamp'})
+            elif 'timestamp' not in df.columns:
+                # If no date column found, use the first column
+                df = df.rename(columns={df.columns[0]: 'timestamp'})
+            
+            # Ensure timestamp is datetime
+            df['timestamp'] = pd.to_datetime(df['timestamp'])
             
             # Add date components for potential feature engineering
             df['year'] = df['timestamp'].dt.year

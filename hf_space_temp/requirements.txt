@@ -1,0 +1,9 @@
+gradio==3.50.2
+torch
+pandas
+numpy
+scikit-learn
+yfinance==0.2.40
+websockets
+huggingface_hub
+joblib

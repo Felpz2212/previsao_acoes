@@ -184,29 +184,42 @@ class ModelTrainer:
         
         Args:
             X_test: Test features
-            y_test: Test targets
+            y_test: Test targets (normalized)
             
         Returns:
             Dictionary with evaluation metrics
         """
         logger.info("Evaluating model")
         
-        # Make predictions
-        predictions = self.model.predict(X_test)
+        # Make predictions (normalized)
+        predictions_scaled = self.model.predict(X_test)
         
-        # Calculate metrics
-        mse = np.mean((predictions - y_test) ** 2)
+        # Inverse transform to get real values
+        predictions = np.array([
+            self.preprocessor.inverse_transform_target(p) 
+            for p in predictions_scaled
+        ])
+        y_test_real = np.array([
+            self.preprocessor.inverse_transform_target(y) 
+            for y in y_test
+        ])
+        
+        # Calculate metrics with real values
+        mse = np.mean((predictions - y_test_real) ** 2)
         rmse = np.sqrt(mse)
-        mae = np.mean(np.abs(predictions - y_test))
-        mape = np.mean(np.abs((y_test - predictions) / y_test)) * 100
+        mae = np.mean(np.abs(predictions - y_test_real))
+        
+        # Avoid division by zero in MAPE
+        mask = y_test_real != 0
+        mape = np.mean(np.abs((y_test_real[mask] - predictions[mask]) / y_test_real[mask])) * 100
         
         # R-squared
-        ss_res = np.sum((y_test - predictions) ** 2)
-        ss_tot = np.sum((y_test - np.mean(y_test)) ** 2)
-        r2 = 1 - (ss_res / ss_tot)
+        ss_res = np.sum((y_test_real - predictions) ** 2)
+        ss_tot = np.sum((y_test_real - np.mean(y_test_real)) ** 2)
+        r2 = 1 - (ss_res / ss_tot) if ss_tot != 0 else 0
         
         # Directional accuracy (did we predict the direction correctly?)
-        direction_actual = np.diff(y_test) > 0
+        direction_actual = np.diff(y_test_real) > 0
         direction_pred = np.diff(predictions) > 0
         directional_accuracy = np.mean(direction_actual == direction_pred) * 100
         
@@ -221,8 +234,8 @@ class ModelTrainer:
         }
         
         logger.info("Evaluation Metrics:")
-        logger.info(f"  RMSE: {rmse:.4f}")
-        logger.info(f"  MAE: {mae:.4f}")
+        logger.info(f"  RMSE: ${rmse:.2f}")
+        logger.info(f"  MAE: ${mae:.2f}")
         logger.info(f"  MAPE: {mape:.2f}%")
         logger.info(f"  R²: {r2:.4f}")
         logger.info(f"  Directional Accuracy: {directional_accuracy:.2f}%")
