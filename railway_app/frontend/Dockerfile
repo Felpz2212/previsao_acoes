@@ -1,5 +1,6 @@
 # Frontend Streamlit Dockerfile
 # Contexto: railway_app/frontend/
+# Build: v2 - Forcando rebuild
 FROM python:3.10-slim
 
 WORKDIR /app
@@ -11,8 +12,9 @@ RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar codigo do frontend
-COPY . .
+# Copiar codigo do frontend (apenas arquivos locais)
+COPY app.py .
+COPY components/ ./components/
 
 # Porta
 EXPOSE 8501
