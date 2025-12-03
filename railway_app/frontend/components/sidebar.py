@@ -1,8 +1,8 @@
 """
-Sidebar Component - Lista de ações e configurações
+Sidebar Component - Lista de acoes e configuracoes
 """
 import streamlit as st
-from typing import Tuple, List, Optional
+from typing import Tuple, List
 
 
 POPULAR_TICKERS = {
@@ -24,7 +24,11 @@ COMPANY_MAP = {
 def resolve_symbol(query: str) -> str:
     """Converte nome para ticker."""
     query = query.strip()
-    if query.upper() == query:
+    if not query:
+        return ""
+    
+    # Se ja e um ticker em maiusculas
+    if query.upper() == query and len(query) <= 10:
         return query.upper()
     
     key = query.lower()
@@ -39,31 +43,38 @@ def resolve_symbol(query: str) -> str:
 
 
 def render_sidebar() -> Tuple[str, int, bool, List[str]]:
-    """
-    Renderiza sidebar e retorna seleções.
+    """Renderiza sidebar e retorna selecoes."""
     
-    Returns:
-        Tuple: (symbol, days, compare_mode, compare_symbols)
-    """
+    # Inicializar session_state
+    if 'selected_symbol' not in st.session_state:
+        st.session_state['selected_symbol'] = ''
+    
     with st.sidebar:
         st.markdown("## 🔍 Buscar Ação")
         
-        # Input de busca
+        # Input de busca - valor inicial do session_state
         search_input = st.text_input(
             "Ticker ou Nome",
+            value=st.session_state.get('selected_symbol', ''),
             placeholder="Ex: AAPL, Apple, Petrobras",
-            key="search_input"
+            key="search_input_field"
         )
         
+        # Atualizar symbol baseado no input
         if search_input:
             selected_symbol = resolve_symbol(search_input)
-            st.success(f"✅ Selecionado: **{selected_symbol}**")
+            if selected_symbol != st.session_state.get('selected_symbol'):
+                st.session_state['selected_symbol'] = selected_symbol
         else:
             selected_symbol = st.session_state.get('selected_symbol', '')
         
+        # Mostrar selecionado
+        if selected_symbol:
+            st.success(f"✅ Selecionado: **{selected_symbol}**")
+        
         st.markdown("---")
         
-        # Período
+        # Periodo
         st.markdown("## 📅 Período")
         days_options = {
             "1 Mês": 30,
@@ -76,13 +87,13 @@ def render_sidebar() -> Tuple[str, int, bool, List[str]]:
         selected_period = st.selectbox(
             "Selecione o período",
             options=list(days_options.keys()),
-            index=2  # 6 Meses default
+            index=2
         )
         selected_days = days_options[selected_period]
         
         st.markdown("---")
         
-        # Modo comparação
+        # Modo comparacao
         st.markdown("## 📊 Comparação")
         compare_mode = st.checkbox("Comparar ações", value=False)
         
@@ -99,17 +110,17 @@ def render_sidebar() -> Tuple[str, int, bool, List[str]]:
         
         st.markdown("---")
         
-        # Ações populares
+        # Acoes populares
         st.markdown("## ⭐ Populares")
         
         for category, tickers in POPULAR_TICKERS.items():
-            with st.expander(category):
+            with st.expander(category, expanded=False):
                 cols = st.columns(2)
                 for i, ticker in enumerate(tickers):
                     with cols[i % 2]:
-                        if st.button(ticker, key=f"sidebar_{ticker}", use_container_width=True):
+                        if st.button(ticker, key=f"btn_{ticker}", use_container_width=True):
+                            # Atualizar session_state e forcar rerun
                             st.session_state['selected_symbol'] = ticker
-                            selected_symbol = ticker
                             st.rerun()
         
         st.markdown("---")
@@ -117,18 +128,16 @@ def render_sidebar() -> Tuple[str, int, bool, List[str]]:
         # Info
         st.markdown("""
         ### 💡 Dicas
-        - Digite o nome da empresa (Apple, Nvidia)
-        - Ou use o ticker (AAPL, NVDA)
-        - Para Brasil, use sufixo .SA (PETR4.SA)
+        - Digite o nome da empresa
+        - Ou use o ticker (AAPL)
+        - Brasil: sufixo .SA
         """)
         
-        st.markdown("---")
         st.markdown("""
-        <div style='text-align: center; font-size: 0.8rem; color: #888;'>
+        <div style='text-align: center; font-size: 0.8rem; color: #888; margin-top: 1rem;'>
             🎓 FIAP Pós-Tech MLET<br>
             Tech Challenge Fase 4
         </div>
         """, unsafe_allow_html=True)
     
     return selected_symbol, selected_days, compare_mode, compare_symbols
-
