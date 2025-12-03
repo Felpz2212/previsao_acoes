@@ -1,15 +1,21 @@
 """
 Model Service - Gerenciamento de modelos LSTM
 Deploy auto-contido para Railway
+
+Suporta:
+- Modelos originais (LSTMPredictor)
+- Modelos melhorados (ImprovedLSTMPredictor) com Attention
 """
 from pathlib import Path
 from typing import Dict, Optional, List
 import pandas as pd
 import numpy as np
+import torch
 from loguru import logger
 
 # Importar de core/ (copia local para deploy)
 from core.lstm_model import LSTMPredictor
+from core.improved_lstm import ImprovedLSTMPredictor, detect_model_type
 from core.preprocessor import StockDataPreprocessor
 
 # HuggingFace Hub para baixar modelos
@@ -21,6 +27,12 @@ class ModelService:
     
     HUB_REPO = "henriquebap/stock-predictor-lstm"
     LOCAL_CACHE = Path("models")
+    
+    # Modelos disponíveis no Hub (atualizados)
+    AVAILABLE_MODELS = [
+        "BASE", "AAPL", "GOOGL", "MSFT", "AMZN", 
+        "META", "NVDA", "TSLA", "JPM", "V"
+    ]
     
     def __init__(self):
         self.model_cache: Dict[str, dict] = {}
@@ -60,8 +72,8 @@ class ModelService:
             try:
                 model_path = self._download_from_hub(model_file)
                 scaler_path = self._download_from_hub(scaler_file)
-                source = "hub_specific"
-                logger.info(f"✅ Modelo ESPECÍFICO para {symbol} encontrado no Hub!")
+                source = "hub"
+                logger.info(f"✅ Modelo para {symbol} encontrado no Hub!")
             except Exception as e:
                 # Fallback para modelo BASE
                 logger.warning(f"⚠️ Modelo específico para {symbol} não encontrado: {e}")
@@ -69,23 +81,33 @@ class ModelService:
                 try:
                     model_path = self._download_from_hub("lstm_model_BASE.pth")
                     scaler_path = self._download_from_hub("scaler_BASE.pkl")
-                    source = "hub_base"
+                    source = "base"
                     logger.info(f"✅ Modelo BASE carregado para {symbol}")
                 except Exception as e2:
                     logger.error(f"❌ Falha ao carregar modelo BASE: {e2}")
                     return None
         
-        # Carregar modelo e preprocessor
+        # Detectar tipo do modelo e carregar
         try:
-            model = LSTMPredictor.load(model_path)
+            model_type = detect_model_type(model_path)
+            logger.info(f"🔎 Tipo detectado: {model_type}")
+            
+            if model_type == 'improved':
+                model = ImprovedLSTMPredictor.load(model_path)
+                logger.info(f"✅ Carregado como ImprovedLSTMPredictor")
+            else:
+                model = LSTMPredictor.load(model_path)
+                logger.info(f"✅ Carregado como LSTMPredictor")
+            
             preprocessor = StockDataPreprocessor.load(scaler_path)
             
-            logger.info(f"🎯 Modelo carregado | Symbol: {symbol} | Source: {source}")
+            logger.info(f"🎯 Modelo carregado | Symbol: {symbol} | Source: {source} | Type: {model_type}")
             
             return {
                 'model': model,
                 'preprocessor': preprocessor,
                 'source': source,
+                'model_type': model_type,
                 'symbol_requested': symbol
             }
         except Exception as e:
@@ -114,7 +136,7 @@ class ModelService:
         model_data = self.get_model(symbol)
         
         if not model_data:
-            logger.warning(f"⚠️ Nenhum modelo disponível, tentando BASE...")
+            logger.warning(f"⚠️ Nenhum modelo disponível para {symbol}, tentando BASE...")
             model_data = self.get_model("BASE")
         
         if not model_data:
@@ -126,12 +148,13 @@ class ModelService:
             
             return {
                 'predicted_price': predicted,
-                'model_type': '⚠️ Fallback (MA)'
+                'model_type': '⚠️ Fallback (Média Móvel)'
             }
         
-        model: LSTMPredictor = model_data['model']
-        preprocessor: StockDataPreprocessor = model_data['preprocessor']
+        model = model_data['model']
+        preprocessor = model_data['preprocessor']
         source = model_data['source']
+        arch_type = model_data.get('model_type', 'unknown')
         
         # Fazer previsao
         try:
@@ -140,21 +163,22 @@ class ModelService:
             pred_scaled = predictions[0]
             predicted_price = preprocessor.inverse_transform_target(pred_scaled)
             
-            # Determinar tipo do modelo para exibição
-            if source == "hub_specific":
-                model_type = f"🎯 LSTM Fine-tuned ({symbol})"
-            elif source == "hub_base":
-                model_type = f"🧠 LSTM Base (genérico)"
-            elif source == "local":
-                model_type = f"📁 LSTM Local ({symbol})"
+            # Determinar nome do modelo para exibição (CORRIGIDO - sem "Fine-tuned")
+            if source == "hub" or source == "local":
+                if arch_type == 'improved':
+                    model_type_display = f"🎯 LSTM Específico ({symbol})"
+                else:
+                    model_type_display = f"📊 LSTM ({symbol})"
+            elif source == "base":
+                model_type_display = "🧠 LSTM Base (genérico)"
             else:
-                model_type = f"LSTM ({source})"
+                model_type_display = f"LSTM ({source})"
             
-            logger.info(f"✅ Previsão concluída | {symbol} | ${predicted_price:.2f} | {model_type}")
+            logger.info(f"✅ Previsão concluída | {symbol} | ${predicted_price:.2f} | {model_type_display}")
             
             return {
                 'predicted_price': float(predicted_price),
-                'model_type': model_type
+                'model_type': model_type_display
             }
         except Exception as e:
             logger.error(f"❌ Erro na previsão para {symbol}: {e}")
@@ -166,17 +190,23 @@ class ModelService:
     
     def list_available_models(self) -> List[str]:
         """Lista modelos disponiveis."""
-        models = ["BASE"]
+        models = list(self.AVAILABLE_MODELS)
         
+        # Adicionar modelos locais
         for f in self.LOCAL_CACHE.glob("lstm_model_*.pth"):
             name = f.stem.replace("lstm_model_", "")
             if name not in models:
                 models.append(name)
         
-        # Modelos conhecidos no Hub
-        hub_models = ["AAPL", "GOOGL", "NVDA"]
-        for m in hub_models:
-            if m not in models:
-                models.append(m)
-        
         return models
+    
+    def clear_cache(self, symbol: Optional[str] = None):
+        """Limpa cache de modelos."""
+        if symbol:
+            symbol = symbol.upper()
+            if symbol in self.model_cache:
+                del self.model_cache[symbol]
+                logger.info(f"🗑️ Cache limpo para {symbol}")
+        else:
+            self.model_cache.clear()
+            logger.info("🗑️ Cache completo limpo")

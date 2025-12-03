@@ -51,7 +51,7 @@ class DatabaseService:
     
     def save_stock_prices(self, symbol: str, df: pd.DataFrame) -> int:
         """
-        Salva preços de ações no banco.
+        Salva preços de ações no banco (UPSERT - ignora duplicados).
         
         Args:
             symbol: Ticker da ação
@@ -62,35 +62,49 @@ class DatabaseService:
         """
         session = self.get_session()
         saved = 0
+        skipped = 0
         
         try:
             for _, row in df.iterrows():
-                price = StockPrice(
-                    symbol=symbol.upper(),
-                    timestamp=row['timestamp'],
-                    open=float(row['open']),
-                    high=float(row['high']),
-                    low=float(row['low']),
-                    close=float(row['close']),
-                    volume=float(row['volume']),
-                    ma_7=float(row.get('ma_7', 0)) if pd.notna(row.get('ma_7')) else None,
-                    ma_30=float(row.get('ma_30', 0)) if pd.notna(row.get('ma_30')) else None,
-                )
+                # Verificar se já existe
+                existing = session.query(StockPrice).filter(
+                    StockPrice.symbol == symbol.upper(),
+                    StockPrice.timestamp == row['timestamp']
+                ).first()
                 
-                try:
-                    session.merge(price)  # Upsert
+                if existing:
+                    # Atualizar registro existente
+                    existing.open = float(row['open'])
+                    existing.high = float(row['high'])
+                    existing.low = float(row['low'])
+                    existing.close = float(row['close'])
+                    existing.volume = float(row['volume'])
+                    existing.ma_7 = float(row.get('ma_7', 0)) if pd.notna(row.get('ma_7')) else None
+                    existing.ma_30 = float(row.get('ma_30', 0)) if pd.notna(row.get('ma_30')) else None
+                    skipped += 1
+                else:
+                    # Criar novo registro
+                    price = StockPrice(
+                        symbol=symbol.upper(),
+                        timestamp=row['timestamp'],
+                        open=float(row['open']),
+                        high=float(row['high']),
+                        low=float(row['low']),
+                        close=float(row['close']),
+                        volume=float(row['volume']),
+                        ma_7=float(row.get('ma_7', 0)) if pd.notna(row.get('ma_7')) else None,
+                        ma_30=float(row.get('ma_30', 0)) if pd.notna(row.get('ma_30')) else None,
+                    )
+                    session.add(price)
                     saved += 1
-                except IntegrityError:
-                    session.rollback()
-                    continue
             
             session.commit()
-            logger.info(f"💾 {saved} preços salvos para {symbol}")
+            logger.info(f"💾 {saved} novos preços salvos para {symbol} ({skipped} atualizados)")
             
         except Exception as e:
             session.rollback()
             logger.error(f"❌ Erro ao salvar preços: {e}")
-            raise
+            # Não re-raise para não quebrar o fluxo
         finally:
             session.close()
         
