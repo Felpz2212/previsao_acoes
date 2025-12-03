@@ -1,20 +1,77 @@
 """
 Data loading module for stock price data from Yahoo Finance.
+Versao robusta com multiplas tentativas e fallbacks.
 """
 import yfinance as yf
 import pandas as pd
 import numpy as np
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 from loguru import logger
+import time
 
 
 class StockDataLoader:
     """Load and manage stock price data from Yahoo Finance."""
     
+    MAX_RETRIES = 3
+    RETRY_DELAY = 2  # segundos
+    
     def __init__(self):
         """Initialize the data loader."""
         pass
+    
+    def _download_with_retry(self, symbol: str, start: str, end: str) -> pd.DataFrame:
+        """Tenta baixar dados com multiplas estrategias."""
+        
+        # Estrategia 1: yf.download()
+        for attempt in range(self.MAX_RETRIES):
+            try:
+                df = yf.download(
+                    symbol,
+                    start=start,
+                    end=end,
+                    progress=False,
+                    auto_adjust=True,
+                    timeout=10
+                )
+                if not df.empty:
+                    return df
+            except Exception as e:
+                logger.warning(f"Tentativa {attempt+1} yf.download falhou: {e}")
+                time.sleep(self.RETRY_DELAY)
+        
+        # Estrategia 2: yf.Ticker().history()
+        for attempt in range(self.MAX_RETRIES):
+            try:
+                ticker = yf.Ticker(symbol)
+                # Calcular periodo em dias
+                start_dt = datetime.strptime(start, '%Y-%m-%d')
+                end_dt = datetime.strptime(end, '%Y-%m-%d')
+                days = (end_dt - start_dt).days
+                
+                # Usar periodo relativo
+                period = "1y" if days <= 365 else "2y" if days <= 730 else "5y"
+                
+                df = ticker.history(period=period, auto_adjust=True)
+                if not df.empty:
+                    # Filtrar pelo periodo solicitado
+                    df = df.loc[start:end]
+                    return df
+            except Exception as e:
+                logger.warning(f"Tentativa {attempt+1} Ticker.history falhou: {e}")
+                time.sleep(self.RETRY_DELAY)
+        
+        # Estrategia 3: Tentar com periodo fixo
+        try:
+            ticker = yf.Ticker(symbol)
+            df = ticker.history(period="max", auto_adjust=True)
+            if not df.empty:
+                return df.tail(365)  # Ultimos 365 dias
+        except Exception as e:
+            logger.error(f"Todas as estrategias falharam para {symbol}: {e}")
+        
+        return pd.DataFrame()
     
     def load_stock_data(
         self,
@@ -24,28 +81,12 @@ class StockDataLoader:
         save_path: Optional[str] = None
     ) -> pd.DataFrame:
         """
-        Load stock data from Yahoo Finance.
-        
-        Args:
-            symbol: Stock ticker symbol (e.g., 'AAPL', 'GOOGL')
-            start_date: Start date in 'YYYY-MM-DD' format
-            end_date: End date in 'YYYY-MM-DD' format
-            save_path: Optional path to save the downloaded data
-            
-        Returns:
-            DataFrame with stock price data
+        Load stock data from Yahoo Finance com fallbacks.
         """
         try:
             logger.info(f"Downloading data for {symbol} from {start_date} to {end_date}")
             
-            # Download data from Yahoo Finance
-            df = yf.download(
-                symbol,
-                start=start_date,
-                end=end_date,
-                progress=False,
-                auto_adjust=True  # Get adjusted prices
-            )
+            df = self._download_with_retry(symbol, start_date, end_date)
             
             if df.empty:
                 raise ValueError(f"No data found for symbol {symbol}")
@@ -60,7 +101,7 @@ class StockDataLoader:
             # Reset index to make date a column
             df = df.reset_index()
             
-            # Handle different column names from yfinance versions
+            # Handle different column names
             date_col = None
             for col in ['Date', 'date', 'Datetime', 'datetime', 'index']:
                 if col in df.columns:
@@ -70,13 +111,16 @@ class StockDataLoader:
             if date_col:
                 df = df.rename(columns={date_col: 'timestamp'})
             elif 'timestamp' not in df.columns:
-                # If no date column found, use the first column
                 df = df.rename(columns={df.columns[0]: 'timestamp'})
             
             # Ensure timestamp is datetime
             df['timestamp'] = pd.to_datetime(df['timestamp'])
             
-            # Add date components for potential feature engineering
+            # Remove timezone if present
+            if df['timestamp'].dt.tz is not None:
+                df['timestamp'] = df['timestamp'].dt.tz_localize(None)
+            
+            # Add date components
             df['year'] = df['timestamp'].dt.year
             df['month'] = df['timestamp'].dt.month
             df['day'] = df['timestamp'].dt.day
@@ -90,7 +134,6 @@ class StockDataLoader:
             
             logger.info(f"Successfully loaded {len(df)} records for {symbol}")
             
-            # Save to file if path provided
             if save_path:
                 df.to_csv(save_path, index=False)
                 logger.info(f"Data saved to {save_path}")
@@ -102,39 +145,23 @@ class StockDataLoader:
             raise
     
     def validate_data(self, df: pd.DataFrame) -> bool:
-        """
-        Validate the loaded data for completeness and correctness.
-        
-        Args:
-            df: DataFrame to validate
-            
-        Returns:
-            True if validation passes, raises exception otherwise
-        """
+        """Validate the loaded data."""
         required_columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume']
         
-        # Check required columns exist
         missing_cols = set(required_columns) - set(df.columns)
         if missing_cols:
             raise ValueError(f"Missing required columns: {missing_cols}")
         
-        # Check for missing values in critical columns
         if df[required_columns].isnull().any().any():
             logger.warning("Found missing values in data")
-            # Log which columns have missing values
-            null_counts = df[required_columns].isnull().sum()
-            logger.warning(f"Null counts: {null_counts[null_counts > 0]}")
         
-        # Check data types
         if not pd.api.types.is_datetime64_any_dtype(df['timestamp']):
             raise ValueError("timestamp column must be datetime type")
         
-        # Check for negative prices
         price_cols = ['open', 'high', 'low', 'close']
         if (df[price_cols] < 0).any().any():
             raise ValueError("Found negative prices in data")
         
-        # Check high >= low
         if (df['high'] < df['low']).any():
             raise ValueError("Found records where high < low")
         
@@ -142,27 +169,19 @@ class StockDataLoader:
         return True
     
     def get_latest_price(self, symbol: str) -> dict:
-        """
-        Get the latest price information for a stock.
-        
-        Args:
-            symbol: Stock ticker symbol
-            
-        Returns:
-            Dictionary with latest price information
-        """
+        """Get the latest price information."""
         try:
             ticker = yf.Ticker(symbol)
             info = ticker.info
             
             return {
                 'symbol': symbol,
-                'current_price': info.get('currentPrice', None),
-                'previous_close': info.get('previousClose', None),
-                'open': info.get('open', None),
-                'day_high': info.get('dayHigh', None),
-                'day_low': info.get('dayLow', None),
-                'volume': info.get('volume', None),
+                'current_price': info.get('currentPrice', info.get('regularMarketPrice')),
+                'previous_close': info.get('previousClose'),
+                'open': info.get('open', info.get('regularMarketOpen')),
+                'day_high': info.get('dayHigh', info.get('regularMarketDayHigh')),
+                'day_low': info.get('dayLow', info.get('regularMarketDayLow')),
+                'volume': info.get('volume', info.get('regularMarketVolume')),
                 'timestamp': datetime.now()
             }
         except Exception as e:
@@ -170,30 +189,4 @@ class StockDataLoader:
             raise
 
 
-# Backward compatibility with existing code
-def load_actions(symbol: str, start_date: str, end_date: str) -> pd.DataFrame:
-    """
-    Legacy function for backward compatibility.
-    
-    Args:
-        symbol: Stock ticker symbol
-        start_date: Start date in 'YYYY-MM-DD' format
-        end_date: End date in 'YYYY-MM-DD' format
-        
-    Returns:
-        DataFrame with stock price data
-    """
-    loader = StockDataLoader()
-    df = loader.load_stock_data(symbol, start_date, end_date)
-    
-    # Keep original column format for compatibility
-    df = df.rename(columns={'timestamp': 'date'})
-    df['ano'] = df['year']
-    df['mes'] = df['month']
-    df['dia'] = df['day']
-    
-    return df
-
-
 # Removido bloco de teste para deploy
-
