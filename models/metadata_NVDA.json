@@ -1,0 +1,48 @@
+{
+  "symbol": "NVDA",
+  "trained_at": "2025-12-03T00:02:31.273655",
+  "model_type": "ImprovedLSTM",
+  "architecture": {
+    "sequence_length": 60,
+    "hidden_size": 64,
+    "num_layers": 3,
+    "dropout": 0.3,
+    "bidirectional": true
+  },
+  "training": {
+    "epochs_requested": 80,
+    "epochs_trained": 27,
+    "early_stopped": true,
+    "batch_size": 32,
+    "learning_rate": 0.001,
+    "patience": 10
+  },
+  "metrics": {
+    "mse": 172.93685290849166,
+    "rmse": 13.150545726641601,
+    "mae": 10.422764621885483,
+    "mape": 7.500036213243375,
+    "r2": 0.8090984118330766,
+    "directional_accuracy": 46.02272727272727,
+    "mean_percent_error": 7.500036213243375,
+    "test_samples": 177,
+    "predictions_sample": [
+      139.71852111816406,
+      138.8625030517578,
+      137.78236389160156,
+      137.93801879882812,
+      137.47677612304688
+    ],
+    "actuals_sample": [
+      118.5150833129883,
+      117.68518829345702,
+      121.39472961425781,
+      120.67481994628905,
+      113.74568939208984
+    ],
+    "final_train_loss": 0.0006563099573563355,
+    "best_val_loss": 0.0017517569795018062,
+    "epochs_trained": 27,
+    "early_stopped": true
+  }
+}

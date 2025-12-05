@@ -1,0 +1,48 @@
+{
+  "symbol": "MSFT",
+  "trained_at": "2025-12-03T00:01:11.670556",
+  "model_type": "ImprovedLSTM",
+  "architecture": {
+    "sequence_length": 60,
+    "hidden_size": 64,
+    "num_layers": 3,
+    "dropout": 0.3,
+    "bidirectional": true
+  },
+  "training": {
+    "epochs_requested": 80,
+    "epochs_trained": 21,
+    "early_stopped": true,
+    "batch_size": 32,
+    "learning_rate": 0.001,
+    "patience": 10
+  },
+  "metrics": {
+    "mse": 415.4613818392726,
+    "rmse": 20.382869813627142,
+    "mae": 16.6459133342161,
+    "mape": 3.472778207740361,
+    "r2": 0.8304499436147684,
+    "directional_accuracy": 53.97727272727273,
+    "mean_percent_error": 3.472778207740361,
+    "test_samples": 177,
+    "predictions_sample": [
+      401.4529724121094,
+      401.7602844238281,
+      403.2348327636719,
+      405.06658935546875,
+      406.4209899902344
+    ],
+    "actuals_sample": [
+      384.7772216796875,
+      389.1736755371094,
+      390.9839477539062,
+      393.0528869628906,
+      387.89056396484375
+    ],
+    "final_train_loss": 0.0017286164869661801,
+    "best_val_loss": 0.0006858553436662381,
+    "epochs_trained": 21,
+    "early_stopped": true
+  }
+}

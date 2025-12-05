@@ -1,0 +1,14 @@
+# Cache de modelos do HuggingFace Hub
+models/hub_cache/
+models/*.pth
+models/*.pkl
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+
+# Logs
+*.log
+

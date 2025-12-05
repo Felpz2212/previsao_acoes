@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  # Stock Prediction API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stock_prediction_api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - DEFAULT_STOCK_SYMBOL=AAPL
+      - DEFAULT_START_DATE=2018-01-01
+      - DEFAULT_END_DATE=2024-12-31
+      - LSTM_SEQUENCE_LENGTH=60
+      - LSTM_EPOCHS=50
+      - LSTM_BATCH_SIZE=32
+      - LSTM_LEARNING_RATE=0.001
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: PostgreSQL database (if not using Supabase)
+  # db:
+  #   image: postgres:15-alpine
+  #   container_name: stock_prediction_db
+  #   environment:
+  #     - POSTGRES_USER=stockuser
+  #     - POSTGRES_PASSWORD=stockpass
+  #     - POSTGRES_DB=stockdb
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+
+# volumes:
+#   postgres_data:
+

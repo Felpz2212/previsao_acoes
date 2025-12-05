@@ -1,0 +1,48 @@
+{
+  "symbol": "AMZN",
+  "trained_at": "2025-12-03T00:01:31.604927",
+  "model_type": "ImprovedLSTM",
+  "architecture": {
+    "sequence_length": 60,
+    "hidden_size": 64,
+    "num_layers": 3,
+    "dropout": 0.3,
+    "bidirectional": true
+  },
+  "training": {
+    "epochs_requested": 80,
+    "epochs_trained": 17,
+    "early_stopped": true,
+    "batch_size": 32,
+    "learning_rate": 0.001,
+    "patience": 10
+  },
+  "metrics": {
+    "mse": 757.1879414970142,
+    "rmse": 27.51704819738146,
+    "mae": 25.62997962391309,
+    "mape": 11.611811406174226,
+    "r2": -1.3179096745068306,
+    "directional_accuracy": 51.70454545454546,
+    "mean_percent_error": 11.611811406174226,
+    "test_samples": 177,
+    "predictions_sample": [
+      184.893310546875,
+      184.16981506347656,
+      184.02088928222656,
+      186.18527221679688,
+      188.0037078857422
+    ],
+    "actuals_sample": [
+      194.9499969482422,
+      196.2100067138672,
+      203.25999450683594,
+      205.7100067138672,
+      201.1300048828125
+    ],
+    "final_train_loss": 0.005616962909698486,
+    "best_val_loss": 0.002788081459584646,
+    "epochs_trained": 17,
+    "early_stopped": true
+  }
+}

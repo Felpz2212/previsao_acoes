@@ -1,0 +1,48 @@
+{
+  "symbol": "AAPL",
+  "trained_at": "2025-12-03T19:40:06.413528",
+  "model_type": "ImprovedLSTM",
+  "architecture": {
+    "sequence_length": 60,
+    "hidden_size": 64,
+    "num_layers": 3,
+    "dropout": 0.3,
+    "bidirectional": true
+  },
+  "training": {
+    "epochs_requested": 80,
+    "epochs_trained": 21,
+    "early_stopped": true,
+    "batch_size": 32,
+    "learning_rate": 0.001,
+    "patience": 10
+  },
+  "metrics": {
+    "mse": 611.5745736162223,
+    "rmse": 24.73003383774924,
+    "mae": 22.714020206429865,
+    "mape": 9.754749516385228,
+    "r2": 0.15546794866426328,
+    "directional_accuracy": 49.43181818181818,
+    "mean_percent_error": 9.754749516385228,
+    "test_samples": 177,
+    "predictions_sample": [
+      184.88555908203125,
+      186.27259826660156,
+      188.70254516601562,
+      191.3255157470703,
+      192.17674255371094
+    ],
+    "actuals_sample": [
+      217.52618408203125,
+      219.977783203125,
+      222.9875030517578,
+      220.77505493164062,
+      223.08715820312503
+    ],
+    "final_train_loss": 0.0010689799226104068,
+    "best_val_loss": 0.0008890802855603397,
+    "epochs_trained": 21,
+    "early_stopped": true
+  }
+}

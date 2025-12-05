@@ -1,0 +1,48 @@
+{
+  "symbol": "JPM",
+  "trained_at": "2025-12-03T00:04:20.869778",
+  "model_type": "ImprovedLSTM",
+  "architecture": {
+    "sequence_length": 60,
+    "hidden_size": 64,
+    "num_layers": 3,
+    "dropout": 0.3,
+    "bidirectional": true
+  },
+  "training": {
+    "epochs_requested": 80,
+    "epochs_trained": 21,
+    "early_stopped": true,
+    "batch_size": 32,
+    "learning_rate": 0.001,
+    "patience": 10
+  },
+  "metrics": {
+    "mse": 938.9341624770668,
+    "rmse": 30.642032610077727,
+    "mae": 29.561309900660973,
+    "mape": 10.416887860388375,
+    "r2": -0.2827448097093199,
+    "directional_accuracy": 49.43181818181818,
+    "mean_percent_error": 10.416887860388375,
+    "test_samples": 177,
+    "predictions_sample": [
+      226.96267700195312,
+      229.01748657226562,
+      230.76589965820312,
+      233.66403198242188,
+      235.59210205078125
+    ],
+    "actuals_sample": [
+      235.26409912109372,
+      237.84304809570312,
+      244.17227172851565,
+      247.19415283203125,
+      247.09571838378906
+    ],
+    "final_train_loss": 0.0006268564309441269,
+    "best_val_loss": 0.000870536154252477,
+    "epochs_trained": 21,
+    "early_stopped": true
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "symbol": "TSLA",
+  "trained_at": "2025-12-03T00:03:55.315592",
+  "model_type": "ImprovedLSTM",
+  "architecture": {
+    "sequence_length": 60,
+    "hidden_size": 64,
+    "num_layers": 3,
+    "dropout": 0.3,
+    "bidirectional": true
+  },
+  "training": {
+    "epochs_requested": 80,
+    "epochs_trained": 54,
+    "early_stopped": true,
+    "batch_size": 32,
+    "learning_rate": 0.001,
+    "patience": 10
+  },
+  "metrics": {
+    "mse": 521.4827711302985,
+    "rmse": 22.835997265946116,
+    "mae": 18.95712806141309,
+    "mape": 5.6106320125795035,
+    "r2": 0.8750190301863928,
+    "directional_accuracy": 46.590909090909086,
+    "mean_percent_error": 5.6106320125795035,
+    "test_samples": 177,
+    "predictions_sample": [
+      267.7887268066406,
+      266.7632141113281,
+      273.6466369628906,
+      288.06732177734375,
+      295.4575500488281
+    ],
+    "actuals_sample": [
+      236.25999450683594,
+      248.7100067138672,
+      278.3900146484375,
+      288.1400146484375,
+      272.05999755859375
+    ],
+    "final_train_loss": 0.002878617701263955,
+    "best_val_loss": 0.0010249712358927354,
+    "epochs_trained": 54,
+    "early_stopped": true
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "symbol": "AAPL",
+  "evaluation_date": "2025-12-02T23:53:46.231016",
+  "test_samples": 60,
+  "metrics": {
+    "rmse": 48.35,
+    "mae": 47.87,
+    "mape": 18.44,
+    "r2": -11.7299,
+    "directional_accuracy": 40.68,
+    "return_correlation": -0.1953
+  },
+  "error_distribution": {
+    "min": 27.55450439453125,
+    "max": 59.39048767089844,
+    "std": 6.826928520912709,
+    "median": 47.999168395996094,
+    "p25": 44.50356674194336,
+    "p75": 52.52695846557617,
+    "p90": 57.081915283203124
+  },
+  "price_range": {
+    "min": 226.57,
+    "max": 283.1,
+    "mean": 258.65
+  },
+  "sample_predictions": [
+    {
+      "date": "2025-11-17",
+      "predicted": 

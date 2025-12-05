@@ -1,0 +1,48 @@
+{
+  "symbol": "GOOGL",
+  "trained_at": "2025-12-03T00:00:44.182501",
+  "model_type": "ImprovedLSTM",
+  "architecture": {
+    "sequence_length": 60,
+    "hidden_size": 64,
+    "num_layers": 3,
+    "dropout": 0.3,
+    "bidirectional": true
+  },
+  "training": {
+    "epochs_requested": 80,
+    "epochs_trained": 45,
+    "early_stopped": true,
+    "batch_size": 32,
+    "learning_rate": 0.001,
+    "patience": 10
+  },
+  "metrics": {
+    "mse": 324.66611844937626,
+    "rmse": 18.018493789697747,
+    "mae": 15.838092868610964,
+    "mape": 7.358889146647331,
+    "r2": 0.8533406443152532,
+    "directional_accuracy": 55.68181818181818,
+    "mean_percent_error": 7.358889146647331,
+    "test_samples": 177,
+    "predictions_sample": [
+      169.0800323486328,
+      168.42935180664062,
+      168.68577575683594,
+      171.21376037597656,
+      173.3319854736328
+    ],
+    "actuals_sample": [
+      162.45785522460938,
+      163.64535522460938,
+      167.3275909423828,
+      170.2015380859375,
+      164.7130889892578
+    ],
+    "final_train_loss": 0.0005196849759578562,
+    "best_val_loss": 0.0005655464483425021,
+    "epochs_trained": 45,
+    "early_stopped": true
+  }
+}

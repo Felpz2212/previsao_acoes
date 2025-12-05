@@ -1,0 +1,240 @@
+=================================================================
+📚 GUIA DE ESTUDO - TECH CHALLENGE FASE 4
+=================================================================
+
+🎯 OBJETIVO: Entender o projeto LSTM de previsão de ações
+
+=================================================================
+📖 MÓDULOS DO CURSO - PRIORIDADE
+=================================================================
+
+🔴 ESSENCIAL (Estude PRIMEIRO):
+────────────────────────────────────────
+
+1. REDES NEURAIS E DEEP LEARNING ⭐⭐⭐
+
+   ✅ Aula 2 - Teoria das Redes Neurais Profundas
+      - Backpropagation (como o modelo aprende)
+      - Loss functions (MSE que usamos)
+      - Optimizers (Adam que usamos)
+      - Gradiente descendente
+      ➡️ ESSENCIAL para explicar como o treino funciona!
+
+   ✅ Aula 3 - Arquiteturas de Redes Neurais Profundas
+      - RNN (Recurrent Neural Networks)
+      - LSTM (Long Short-Term Memory) ⭐ SEU MODELO!
+      - Por que LSTM funciona para séries temporais
+      - Cell state e hidden state
+      ➡️ ESSENCIAL para explicar seu modelo!
+
+   ✅ Aula 4 - Técnicas de Aplicação
+      - Dropout (usamos 0.2)
+      - Train/validation/test split
+      - Regularização
+      - Hiperparâmetros
+      ➡️ IMPORTANTE para explicar as técnicas usadas
+
+   ⚠️ Aula 5 - Casos de Uso
+      - Exemplos práticos
+      - Séries temporais
+      ➡️ BOM TER, mas não crítico
+
+
+🟡 OPCIONAL (Se tiver tempo):
+────────────────────────────────────────
+
+2. NLP (Natural Language Processing)
+   - Não é necessário para este projeto
+   - Útil SE você quiser adicionar análise de sentimento
+   - Pode estudar DEPOIS do Tech Challenge
+
+3. COMPUTATIONAL VISION
+   - Não relevante para previsão de ações
+   - Pode pular completamente
+
+4. GENERATIVE AI
+   - Não relevante para este projeto
+   - Pode pular completamente
+
+
+=================================================================
+📝 CHECKLIST DE CONCEITOS QUE VOCÊ PRECISA SABER EXPLICAR
+=================================================================
+
+□ O que é uma rede neural?
+□ O que é Deep Learning?
+□ Diferença entre RNN e LSTM
+□ Por que LSTM é bom para séries temporais?
+□ O que é backpropagation?
+□ O que é uma função de perda (loss)?
+□ O que faz o optimizer Adam?
+□ O que é dropout e por que usar?
+□ O que são epochs, batch size, learning rate?
+□ Diferença entre train/validation/test
+□ O que é normalização e por que fazer?
+□ O que são MAE, RMSE, MAPE?
+
+
+=================================================================
+🎓 COMO ESTUDAR CADA CONCEITO
+=================================================================
+
+1. LSTM (MAIS IMPORTANTE!)
+   ──────────────────────
+   ✅ Assista: Aula 3 - Arquiteturas
+   ✅ Leia: https://colah.github.io/posts/2015-08-Understanding-LSTMs/
+   ✅ Pratique: Execute o notebook 02_entendendo_lstm_passo_a_passo.ipynb
+   ✅ Explique em voz alta: "LSTM é..."
+
+2. Backpropagation
+   ────────────────
+   ✅ Assista: Aula 2 - Teoria
+   ✅ Entenda: Como o modelo ajusta os pesos
+   ✅ Analogia: É como aprender com os erros
+
+3. Métricas (MAE, RMSE, MAPE)
+   ──────────────────────────
+   ✅ Assista: Aula 4 - Técnicas
+   ✅ Pratique: Veja no notebook como são calculadas
+   ✅ Explique: "MAE é o erro médio em dólares..."
+
+4. Overfitting vs Underfitting
+   ───────────────────────────
+   ✅ Assista: Aula 4 - Técnicas
+   ✅ Entenda: Por que usamos dropout e train/test split
+   ✅ Analogia: Decorar vs Entender
+
+
+=================================================================
+💡 ROTEIRO DE ESTUDO RECOMENDADO (1 SEMANA)
+=================================================================
+
+DIA 1-2: Fundamentos
+─────────────────────
+□ Aula 2 - Teoria das Redes Neurais (1-2h)
+□ Fazer anotações dos conceitos principais
+□ Assistir vídeos complementares sobre backpropagation
+
+DIA 3-4: LSTM
+─────────────
+□ Aula 3 - Arquiteturas (foco em LSTM) (2h)
+□ Ler artigo do Colah sobre LSTM (1h)
+□ Executar notebook 02_entendendo_lstm_passo_a_passo.ipynb (2h)
+□ Modificar hiperparâmetros e ver o que acontece
+
+DIA 5: Técnicas
+────────────────
+□ Aula 4 - Técnicas de Aplicação (1-2h)
+□ Entender dropout, regularização
+□ Praticar cálculo de métricas no notebook
+
+DIA 6: Prática
+───────────────
+□ Treinar modelo para outra ação (GOOGL, MSFT)
+□ Comparar resultados
+□ Entender por que métricas diferem
+
+DIA 7: Revisão
+───────────────
+□ Revisar todos os conceitos
+□ Praticar explicação em voz alta
+□ Preparar apresentação se necessário
+
+
+=================================================================
+🗣️ COMO EXPLICAR SEU PROJETO (Template)
+=================================================================
+
+1. PROBLEMA
+   "Queremos prever preços de ações usando machine learning"
+
+2. SOLUÇÃO
+   "Usei LSTM, uma rede neural especializada em séries temporais"
+
+3. POR QUÊ LSTM?
+   "LSTM tem memória de curto e longo prazo, perfeito para dados
+    que dependem do histórico como preços de ações"
+
+4. PIPELINE
+   "Coleto dados do Yahoo Finance → Normalizo → Crio sequências
+    de 60 dias → Treino o modelo → Avalio com MAE/RMSE/MAPE"
+
+5. ARQUITETURA
+   "2 camadas LSTM com 50 neurônios cada, dropout 0.2 para evitar
+    overfitting, e uma camada fully connected para output"
+
+6. RESULTADOS
+   "Consegui MAPE de X%, o que significa erro médio de X%"
+
+7. LIMITAÇÕES
+   "Modelo usa apenas dados históricos, não considera notícias
+    ou eventos econômicos. É educacional, não para uso real"
+
+
+=================================================================
+📚 RECURSOS EXTRAS (Se precisar aprofundar)
+=================================================================
+
+Videos:
+  - 3Blue1Brown: "Neural Networks" series (YouTube)
+  - StatQuest: "LSTM" (YouTube)
+  
+Artigos:
+  - Understanding LSTM Networks (colah.github.io)
+  - PyTorch LSTM Documentation
+
+Prática:
+  - Kaggle: Stock Price Prediction datasets
+  - Execute e modifique o notebook 02_entendendo_lstm
+
+
+=================================================================
+⚠️ EVITE PERDER TEMPO COM:
+=================================================================
+
+❌ NLP (não precisa para ações)
+❌ Visão Computacional (não precisa)
+❌ Generative AI (não precisa)
+❌ Detalhes matemáticos complexos (entenda o conceito)
+❌ Implementar do zero (use PyTorch)
+
+
+=================================================================
+✅ CHECKLIST FINAL ANTES DE ENTREGAR
+=================================================================
+
+□ Consigo explicar o que é LSTM em 1 minuto
+□ Sei por que usar LSTM para séries temporais
+□ Entendo as métricas MAE, RMSE, MAPE
+□ Sei como funcionou o treinamento
+□ Executei o notebook e entendi cada passo
+□ Consigo modificar hiperparâmetros
+□ Sei as limitações do modelo
+□ Entendo o código básico do projeto
+
+
+=================================================================
+🎯 FOCO NO ESSENCIAL!
+=================================================================
+
+Você NÃO precisa:
+  ❌ Saber todos os detalhes matemáticos
+  ❌ Implementar LSTM do zero
+  ❌ Ser expert em deep learning
+
+Você PRECISA:
+  ✅ Entender o conceito de LSTM
+  ✅ Saber explicar seu pipeline
+  ✅ Entender as métricas
+  ✅ Saber rodar e modificar o código
+
+
+=================================================================
+
+BOA SORTE! 🚀
+
+Qualquer dúvida, execute o notebook passo a passo e leia os
+comentários. Está tudo explicado de forma didática!
+
+=================================================================
+

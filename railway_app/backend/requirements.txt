@@ -1,0 +1,27 @@
+# FastAPI Backend
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.2
+
+# Data & ML (mesmas dependencias de src/)
+torch>=2.0.0
+pandas>=2.0.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+# yfinance - usar versao mais recente (funciona localmente)
+yfinance>=0.2.60
+
+# Utils
+joblib>=1.3.0
+huggingface_hub>=0.19.0
+python-dotenv>=1.0.0
+loguru>=0.7.0
+psutil>=5.9.0  # Monitoramento de sistema
+
+# HTTP
+httpx>=0.25.0
+websockets>=11.0.0
+
+# Database
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.0

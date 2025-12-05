@@ -1,18 +1,9 @@
-# Virtual environments
-.venv/
-.venv311/
-venv/
-env/
-ENV/
-
-# Python cache and compiled files
+# Python
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
+*$py.class
+*.so
 .Python
-
-# Distribution / packaging
 build/
 develop-eggs/
 dist/
@@ -29,90 +20,68 @@ wheels/
 .installed.cfg
 *.egg
 
-# PyInstaller
-*.manifest
-*.spec
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
 
-# Jupyter Notebook
-.ipynb_checkpoints/
-*.ipynb_checkpoints
-
-# Environment variables
-.env
-.env.local
-.env.*.local
-
-# IDE and editor files
+# IDEs
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# OS generated files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Data (exceto README)
+data/raw/*.csv
+data/processed/*.csv
+
+# Models - Binarios sao gerenciados via HuggingFace Hub
+models/*.h5
+models/*.keras
+models/*.pt
+models/*.pth
+models/*.pkl
+models/*.joblib
+models/*.onnx
+
+# Mas manter arquivos de metadados e documentacao
+!models/README.md
+!models/metadata_*.json
 
 # Logs
+logs/*.log
 *.log
-logs/
 
-# Data directories (but keep .gitkeep files)
-data/raw/*
-!data/raw/.gitkeep
-data/processed/*
-!data/processed/.gitkeep
-data/models/*
-!data/models/.gitkeep
-
-# Temporary files
-*.tmp
-*.temp
-.cache/
-
-# Hugging Face cache
-.huggingface/
-
-# Model artifacts
-*.pkl
-*.joblib
-*.h5
-*.pt
-*.pth
-models/
-!models/.gitkeep
-
-# Allow the saved production model to be tracked
-!data/models/wine_quality_regressor.joblib
-
-# Coverage reports
-htmlcov/
-.coverage
-.coverage.*
-coverage.xml
-# Bytecode
-__pycache__/
-*.py[cod]
-
-# Virtual envs
-.venv/
-.venv311/
-
-# Local notebooks outputs
-notebooks/.ipynb_checkpoints/
-
-# Large local artifacts (keep notebooks/data/* only tracked if needed)
-notebooks/data/
-!notebooks/data/processed/
-
-# Local analysis docs (do not track)
-ANALISE_COMPLETA_DO_PROJETO.md
-PLANO_ACAO_IMEDIATO.md
-
-# OS files
+# OS
 .DS_Store
+Thumbs.db
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Docker
+.dockerignore
+
+# HuggingFace Hub cache
+models/hub_cache/
+
+# Railway
+railway_app/backend/models/
+railway_app/frontend/__pycache__/
+
+# Reports temporarios
+reports/*.txt
+reports/*.json
+!reports/AVALIACAO_MODELOS.md
