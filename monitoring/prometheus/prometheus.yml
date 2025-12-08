@@ -1,0 +1,35 @@
+# Prometheus Configuration for Stock Predictor API
+# Tech Challenge Fase 4 - FIAP PosTech
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+rule_files: []
+
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Stock Predictor API - Local
+  - job_name: 'stock-predictor-local'
+    static_configs:
+      - targets: ['host.docker.internal:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Stock Predictor API - Railway (Produção)
+  - job_name: 'stock-predictor-railway'
+    static_configs:
+      - targets: ['previsaoacoes-back-production.up.railway.app']
+    scheme: https
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
