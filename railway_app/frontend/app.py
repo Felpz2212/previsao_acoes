@@ -5,6 +5,8 @@ Tech Challenge Fase 4 - FIAP Pós-Tech ML Engineering
 import streamlit as st
 import requests
 import pandas as pd
+import plotly.graph_objects as go
+import plotly.express as px
 from datetime import datetime
 import os
 
@@ -121,7 +123,111 @@ def get_popular_stocks() -> dict:
     }
 
 
+def render_monitoring_page():
+    """Página de Monitoramento."""
+    st.markdown('<h1 class="main-header">📊 Monitoramento</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="sub-header">Métricas da API e Modelos em tempo real</p>', unsafe_allow_html=True)
+    st.markdown("---")
+    
+    col1, col2 = st.columns([3, 1])
+    with col2:
+        if st.button("🔄 Atualizar"):
+            st.rerun()
+    
+    try:
+        response = requests.get(f"{API_URL}/api/monitoring", timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            
+            # KPIs
+            cols = st.columns(5)
+            with cols[0]:
+                st.metric("⏱️ Uptime", data.get('uptime_human', 'N/A'))
+            with cols[1]:
+                st.metric("📨 Requests", f"{data.get('total_requests', 0):,}")
+            with cols[2]:
+                st.metric("❌ Erros", f"{data.get('error_rate_percent', 0):.1f}%")
+            with cols[3]:
+                st.metric("🔮 Previsões", f"{data.get('total_predictions', 0):,}")
+            with cols[4]:
+                system = data.get('system', {})
+                cpu = system.get('cpu_percent', 0) if system else 0
+                st.metric("💻 CPU", f"{cpu:.1f}%")
+            
+            st.divider()
+            
+            # Endpoints
+            st.subheader("📊 Latência por Endpoint")
+            endpoints = data.get('endpoints', {})
+            if endpoints:
+                endpoint_data = []
+                for ep, stats in endpoints.items():
+                    endpoint_data.append({
+                        'Endpoint': ep[:40],
+                        'Requests': stats.get('count', 0),
+                        'Avg (ms)': round(stats.get('avg_time_ms', 0), 1),
+                        'Max (ms)': round(stats.get('max_time_ms', 0), 1),
+                    })
+                df = pd.DataFrame(endpoint_data).sort_values('Requests', ascending=False)
+                st.dataframe(df.head(10), use_container_width=True, hide_index=True)
+            
+            # Modelos
+            st.subheader("🧠 Performance dos Modelos")
+            models = data.get('models', {})
+            if models:
+                model_data = []
+                for sym, stats in models.items():
+                    model_data.append({
+                        'Símbolo': sym,
+                        'Previsões': stats.get('predictions', 0),
+                        'Avg (ms)': round(stats.get('avg_inference_ms', 0), 1),
+                    })
+                st.dataframe(pd.DataFrame(model_data), use_container_width=True, hide_index=True)
+            else:
+                st.info("🔮 Faça previsões para ver métricas dos modelos")
+            
+            # Sistema
+            st.subheader("💻 Recursos do Sistema")
+            system = data.get('system')
+            if system:
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("CPU", f"{system.get('cpu_percent', 0):.1f}%")
+                    st.progress(min(system.get('cpu_percent', 0) / 100, 1.0))
+                with col2:
+                    st.metric("Memória", f"{system.get('memory_percent', 0):.1f}%")
+                    st.progress(min(system.get('memory_percent', 0) / 100, 1.0))
+                st.caption(f"💾 {system.get('memory_used_mb', 0):.0f} MB usados")
+        else:
+            st.error(f"Erro ao conectar: {response.status_code}")
+    except Exception as e:
+        st.error(f"⚠️ Erro de conexão: {e}")
+        st.info(f"API URL: {API_URL}/api/monitoring")
+    
+    # Métricas Prometheus raw
+    st.divider()
+    with st.expander("📝 Métricas Raw (Prometheus)"):
+        if st.button("Carregar /metrics"):
+            try:
+                resp = requests.get(f"{API_URL}/metrics", timeout=10)
+                if resp.status_code == 200:
+                    st.code(resp.text[:2000] + "\n...", language="text")
+            except Exception as e:
+                st.error(f"Erro: {e}")
+
+
 def main():
+    # Navegação
+    page = st.sidebar.radio(
+        "📍 Navegação",
+        ["🏠 Principal", "📊 Monitoramento"],
+        label_visibility="collapsed"
+    )
+    
+    if page == "📊 Monitoramento":
+        render_monitoring_page()
+        return
+    
     # Header
     col1, col2 = st.columns([3, 1])
     with col1:
