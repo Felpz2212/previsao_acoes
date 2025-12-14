@@ -580,11 +580,8 @@ def main():
     
     st.markdown("---")
     
-    # Sidebar com trigger de load
-    selected_symbol, selected_days, compare_mode, compare_symbols, should_load = render_sidebar()
-    
-    # Obter símbolo carregado
-    loaded_symbol = st.session_state.get('loaded_symbol', '')
+    # Sidebar - carregamento automático
+    selected_symbol, selected_days, compare_mode, compare_symbols = render_sidebar()
     
     # Main content
     if compare_mode and compare_symbols:
@@ -619,12 +616,12 @@ def main():
             st.dataframe(pd.DataFrame(perf_data), use_container_width=True)
     else:
         # Modo normal - uma ação
-        if loaded_symbol:
-            # Banner com símbolo carregado
+        if selected_symbol:
+            # Banner com símbolo selecionado
             st.markdown(f"""
             <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
                         padding: 1rem; border-radius: 1rem; margin-bottom: 1rem; text-align: center;'>
-                <h2 style='color: white; margin: 0;'>📊 {loaded_symbol}</h2>
+                <h2 style='color: white; margin: 0;'>📊 {selected_symbol}</h2>
                 <p style='color: rgba(255,255,255,0.8); margin: 0.25rem 0 0 0; font-size: 0.9rem;'>
                     Período: {selected_days} dias
                 </p>
@@ -635,14 +632,14 @@ def main():
             
             with col1:
                 # Obter dados com loading bonito
-                with st.spinner(f"🔄 Carregando dados de {loaded_symbol}..."):
-                    stock_data = get_stock_data(loaded_symbol, selected_days)
+                with st.spinner(f"🔄 Carregando dados de {selected_symbol}..."):
+                    stock_data = get_stock_data(selected_symbol, selected_days)
                 
                 if stock_data:
                     # Gráfico principal
                     st.markdown("### 📈 Histórico de Preços")
                     df = pd.DataFrame(stock_data['data'])
-                    fig = create_candlestick_chart(df, loaded_symbol)
+                    fig = create_candlestick_chart(df, selected_symbol)
                     st.plotly_chart(fig, use_container_width=True)
                     
                     # Indicadores técnicos em cards bonitos
@@ -686,7 +683,7 @@ def main():
                         </div>
                         """, unsafe_allow_html=True)
                 else:
-                    st.error(f"❌ Não foi possível obter dados para {loaded_symbol}")
+                    st.error(f"❌ Não foi possível obter dados para {selected_symbol}")
                     st.info("💡 Tente novamente ou selecione outra ação")
             
             with col2:
@@ -702,7 +699,7 @@ def main():
                 
                 if st.button("🚀 Fazer Previsão", use_container_width=True, type="primary"):
                     with st.spinner("🧠 Calculando previsão com modelo LSTM..."):
-                        prediction = get_prediction(loaded_symbol)
+                        prediction = get_prediction(selected_symbol)
                     
                     if prediction:
                         st.success("✅ Previsão concluída!")
@@ -757,8 +754,6 @@ def main():
                     with cols[i % len(cols)]:
                         if st.button(f"📊 {sym}", key=f"pop_{sym}", use_container_width=True):
                             st.session_state['selected_symbol'] = sym
-                            st.session_state['loaded_symbol'] = sym
-                            st.session_state['search_input_field'] = sym
                             st.rerun()
                 
                 st.markdown("<br>", unsafe_allow_html=True)

@@ -42,60 +42,33 @@ def resolve_symbol(query: str) -> str:
     return query.upper()
 
 
-def render_sidebar() -> Tuple[str, int, bool, List[str], bool]:
-    """Renderiza sidebar e retorna selecoes + trigger de load."""
+def render_sidebar() -> Tuple[str, int, bool, List[str]]:
+    """Renderiza sidebar e retorna selecoes."""
     
     # Inicializar session_state
     if 'selected_symbol' not in st.session_state:
         st.session_state['selected_symbol'] = ''
-    if 'loaded_symbol' not in st.session_state:
-        st.session_state['loaded_symbol'] = ''
-    if 'search_input_field' not in st.session_state:
-        st.session_state['search_input_field'] = ''
     
     with st.sidebar:
         st.markdown("## 🔍 Buscar Ação")
         
-        # Input de busca
-        col1, col2 = st.columns([3, 1])
+        # Input de busca - carregamento automático
+        search_input = st.text_input(
+            "Ticker ou Nome",
+            placeholder="Ex: AAPL, Apple, Petrobras",
+            key="search_input_field"
+        )
         
-        with col1:
-            search_input = st.text_input(
-                "Ticker ou Nome",
-                placeholder="Ex: AAPL",
-                key="search_input_field",
-                label_visibility="collapsed"
-            )
-        
-        # Resolver símbolo
+        # Resolver símbolo e carregar automaticamente
         if search_input:
             selected_symbol = resolve_symbol(search_input)
+            st.session_state['selected_symbol'] = selected_symbol
         else:
             selected_symbol = st.session_state.get('selected_symbol', '')
         
-        # Botão Carregar - TRIGGER EXPLÍCITO
-        with col2:
-            load_button = st.button(
-                "🚀",
-                key="load_button",
-                help="Carregar dados",
-                use_container_width=True,
-                disabled=not selected_symbol
-            )
-        
-        # Status da seleção
+        # Mostrar símbolo selecionado
         if selected_symbol:
-            if selected_symbol == st.session_state.get('loaded_symbol'):
-                st.info(f"📊 **{selected_symbol}** (carregado)")
-            else:
-                st.warning(f"⚠️ **{selected_symbol}** (não carregado)\n\nClique em 🚀 para carregar")
-        
-        # Atualizar estado quando carregar
-        should_load = False
-        if load_button and selected_symbol:
-            st.session_state['selected_symbol'] = selected_symbol
-            st.session_state['loaded_symbol'] = selected_symbol
-            should_load = True
+            st.success(f"✅ Selecionado: **{selected_symbol}**")
         
         st.markdown("---")
         
@@ -143,16 +116,13 @@ def render_sidebar() -> Tuple[str, int, bool, List[str], bool]:
                 cols = st.columns(2)
                 for i, ticker in enumerate(tickers):
                     with cols[i % 2]:
-                        # Indicador se já está carregado
-                        is_loaded = ticker == st.session_state.get('loaded_symbol')
-                        button_label = f"✓ {ticker}" if is_loaded else ticker
+                        # Checkmark se for o selecionado
+                        is_selected = ticker == st.session_state.get('selected_symbol')
+                        button_label = f"✓ {ticker}" if is_selected else ticker
                         
                         if st.button(button_label, key=f"btn_{ticker}", use_container_width=True):
-                            # Selecionar E carregar imediatamente
+                            # Selecionar e recarregar
                             st.session_state['selected_symbol'] = ticker
-                            st.session_state['loaded_symbol'] = ticker
-                            st.session_state['search_input_field'] = ticker
-                            should_load = True
                             st.rerun()
         
         st.markdown("---")
@@ -172,4 +142,4 @@ def render_sidebar() -> Tuple[str, int, bool, List[str], bool]:
         </div>
         """, unsafe_allow_html=True)
     
-    return selected_symbol, selected_days, compare_mode, compare_symbols, should_load
+    return selected_symbol, selected_days, compare_mode, compare_symbols
