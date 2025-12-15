@@ -86,3 +86,6 @@ reports/*.txt
 reports/*.json
 !reports/AVALIACAO_MODELOS.md
 docs/prometheus info.txt
+
+# Documentação interna (uso privado)
+docs/

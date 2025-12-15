@@ -32,12 +32,24 @@ Este projeto foi desenvolvido como parte do **Tech Challenge Fase 4** da Pós-Te
 - **CI/CD**: GitHub Actions para testes e deploy automatizados
 - **Monitoramento**: Métricas Prometheus e logging estruturado
 
+### Tecnologias e Stack
+
+- **Backend**: FastAPI 0.104+, Python 3.10+
+- **Frontend**: Streamlit, Plotly
+- **ML Framework**: PyTorch, scikit-learn
+- **Database**: PostgreSQL (Railway Cloud)
+- **Model Hub**: HuggingFace Hub
+- **Deploy**: Railway (Docker containers)
+- **Data Source**: Yahoo Finance API (yfinance)
+- **Monitoring**: Prometheus metrics
+- **WebSocket**: Para atualizações real-time
+
 ### Métricas de Avaliação
 
-O modelo é avaliado usando:
+Os modelos são avaliados usando:
 - **RMSE** (Root Mean Square Error)
 - **MAE** (Mean Absolute Error)
-- **MAPE** (Mean Absolute Percentage Error)
+- **MAPE** (Mean Absolute Percentage Error) - Principal métrica
 - **R²** (Coefficient of Determination)
 - **Directional Accuracy** (acurácia da direção da mudança de preço)
 
@@ -417,9 +429,21 @@ pip install -r requirements.txt
 
 4. **Configure variáveis de ambiente**
 
+Crie um arquivo `.env` na raiz do projeto:
+
 ```bash
-cp .env.example .env
-# Edite .env com suas configurações
+# Backend
+DATABASE_URL=postgresql://user:password@localhost:5432/stockdb
+PORT=8000
+HF_TOKEN=your_huggingface_token  # Opcional, para upload de modelos
+
+# Frontend
+API_URL=http://localhost:8000
+PORT=8501
+
+# Opcional
+LOG_LEVEL=INFO
+ENVIRONMENT=development
 ```
 
 ### Instalação com Docker
@@ -460,47 +484,63 @@ python -m uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --workers 4
 ### 4. Fazer Previsões via API
 
 ```bash
-# Previsão simples
-curl -X POST "http://localhost:8000/api/v1/predict" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "symbol": "AAPL",
-    "days_ahead": 1
-  }'
+# Previsão para AAPL
+curl https://previsaoacoes-back-production.up.railway.app/api/predictions/AAPL
 
-# Previsão em lote
-curl -X POST "http://localhost:8000/api/v1/predict/batch" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "symbols": ["AAPL", "GOOGL", "MSFT"],
-    "days_ahead": 1
-  }'
+# Dados de uma ação
+curl https://previsaoacoes-back-production.up.railway.app/api/stocks/GOOGL
+
+# Lista de ações populares
+curl https://previsaoacoes-back-production.up.railway.app/api/stocks/popular/list
+
+# Health de um modelo
+curl https://previsaoacoes-back-production.up.railway.app/api/ml-health/health/AAPL
+
+# Métricas de monitoramento
+curl https://previsaoacoes-back-production.up.railway.app/api/monitoring
 ```
 
 ## API Endpoints
 
-### Previsões
+### Aplicação em Produção
 
-- `POST /api/v1/predict` - Previsão para uma ação
-- `POST /api/v1/predict/batch` - Previsões em lote
+**Backend API**: `https://previsaoacoes-back-production.up.railway.app`  
+**Frontend Dashboard**: `https://stock-pred.up.railway.app`  
+**Documentação Interativa**: `https://previsaoacoes-back-production.up.railway.app/docs`
 
-### Dados
+### Stocks (Dados de Ações)
 
-- `GET /api/v1/stocks/{symbol}/historical` - Dados históricos
-- `GET /api/v1/stocks/{symbol}/latest` - Preço mais recente
-- `GET /api/v1/stocks/available` - Lista de ações disponíveis
+- `GET /api/stocks/popular/list` - Lista ações populares (AAPL, GOOGL, MSFT, etc)
+- `GET /api/stocks/{symbol}` - Dados históricos e preço atual de uma ação
+- `GET /api/stocks/compare` - Comparação entre múltiplas ações
 
-### Modelos
+### Predictions (Previsões)
 
-- `POST /api/v1/models/train` - Treinar/retreinar modelo
-- `GET /api/v1/models/status` - Status de todos os modelos
-- `GET /api/v1/models/{symbol}/performance` - Métricas de um modelo
+- `GET /api/predictions/{symbol}` - Previsão de preço para uma ação específica
+- `POST /api/predictions/batch` - Previsões em lote para múltiplas ações
+- `GET /api/predictions/history` - Histórico de previsões
 
-### Monitoramento
+**Exemplo de uso:**
+```bash
+curl https://previsaoacoes-back-production.up.railway.app/api/predictions/AAPL
+```
 
-- `GET /api/v1/health` - Health check
-- `GET /api/v1/metrics` - Métricas da API
-- `GET /api/v1/metrics/prometheus` - Métricas em formato Prometheus
+### ML Health (Saúde dos Modelos)
+
+- `GET /api/ml-health/health/{symbol}` - Health score (0-100) do modelo
+- `GET /api/ml-health/drift-report` - Relatório de data drift
+- `GET /api/ml-health/overview` - Visão geral de todos os modelos
+- `GET /api/ml-health/data-quality` - Qualidade dos dados de entrada
+- `GET /api/ml-health/prediction-distribution/{symbol}` - Análise de distribuição
+
+### Monitoring (Monitoramento)
+
+- `GET /api/monitoring` - Métricas gerais da API
+- `GET /metrics` - Métricas em formato Prometheus
+
+### WebSocket
+
+- `WS /ws` - Conexão WebSocket para atualizações em tempo real
 
 ## Treinamento de Modelos
 
@@ -535,30 +575,138 @@ LSTM_DROPOUT = 0.2
 
 ## Deploy
 
-### Railway
+### Aplicação em Produção
 
-1. **Conecte seu repositório ao Railway**
-2. **Configure variáveis de ambiente**
-3. **Deploy automático via push no main**
+O projeto está deployado no **Railway** com arquitetura de microserviços:
 
-Veja [DEPLOYMENT.md](docs/DEPLOYMENT.md) para instruções detalhadas.
+**URLs de Acesso:**
+- **Frontend (Streamlit)**: https://stock-pred.up.railway.app
+- **Backend (FastAPI)**: https://previsaoacoes-back-production.up.railway.app
+- **API Docs**: https://previsaoacoes-back-production.up.railway.app/docs
+- **PostgreSQL**: Managed database no Railway Cloud
 
-### HuggingFace Spaces (UI Demo)
+### Modelos ML (HuggingFace Hub)
 
-Crie um Gradio app em `app_gradio.py` e faça deploy no HuggingFace Spaces.
+Os modelos LSTM treinados estão hospedados no HuggingFace Hub:
 
-### Docker
+**Repository**: https://huggingface.co/henriquebap/stock-predictor-lstm
+
+**Modelos Disponíveis:**
+- `BASE` - Modelo genérico (MAPE: 41.46%)
+- `AAPL` - Apple (MAPE: 8.28% - Melhor performance)
+- `GOOGL` - Google
+- `MSFT` - Microsoft
+- `AMZN` - Amazon
+- `META` - Meta/Facebook
+- `NVDA` - NVIDIA
+- `TSLA` - Tesla
+- `JPM` - JP Morgan
+- `V` - Visa
+
+Total: **11 modelos** (1 BASE + 10 específicos)
+
+### Arquitetura de Deploy
+
+```
+Railway Cloud
+├── Backend Container (FastAPI)
+│   ├── Python 3.10
+│   ├── Auto-deploy on push
+│   └── Download modelos do HuggingFace Hub
+├── Frontend Container (Streamlit)
+│   ├── Dashboard interativo
+│   └── Monitoramento em tempo real
+└── PostgreSQL Database
+    ├── Predictions storage
+    ├── Model metrics
+    └── Training logs
+```
+
+### Como Replicar o Deploy no Railway
+
+**1. Backend (FastAPI)**
 
 ```bash
-# Build
-docker build -t stock-prediction-api .
+# No Railway, criar novo projeto a partir do GitHub
+# Configurar:
+Root Directory: railway_app/backend
+Build Command: (automático - Dockerfile)
+Start Command: (automático - Dockerfile)
 
-# Run
-docker run -p 8000:8000 \
-  -v $(pwd)/models:/app/models \
-  -v $(pwd)/data:/app/data \
-  stock-prediction-api
+# Variáveis de Ambiente:
+DATABASE_URL=${{Postgres.DATABASE_URL}}  # Auto-gerado pelo Railway
+PORT=8000
+PYTHONUNBUFFERED=1
 ```
+
+**2. Frontend (Streamlit)**
+
+```bash
+# Criar segundo serviço no mesmo projeto
+Root Directory: railway_app/frontend
+Build Command: (automático - Dockerfile)
+Start Command: (automático - Dockerfile)
+
+# Variáveis de Ambiente:
+API_URL=https://seu-backend.up.railway.app
+PORT=8501
+```
+
+**3. PostgreSQL**
+
+```bash
+# Adicionar PostgreSQL do Railway Marketplace
+# Conecta automaticamente ao backend via ${{Postgres.DATABASE_URL}}
+```
+
+**4. Deploy Automático**
+
+- Push para branch `main` → Deploy automático
+- Railway faz build dos Dockerfiles
+- Modelos são baixados do HuggingFace Hub na primeira execução
+- URLs geradas automaticamente pelo Railway
+
+### Configuração do HuggingFace Hub
+
+Para fazer upload de modelos treinados:
+
+```bash
+# Instalar HuggingFace CLI
+pip install huggingface_hub
+
+# Login
+huggingface-cli login
+
+# Upload de modelo
+python scripts/upload_to_hub.py --model models/lstm_model_AAPL.pth --symbol AAPL
+```
+
+Os modelos são automaticamente baixados pelo backend quando necessário.
+
+### Docker Local
+
+```bash
+# Backend
+cd railway_app/backend
+docker build -t stock-backend .
+docker run -p 8000:8000 stock-backend
+
+# Frontend
+cd railway_app/frontend
+docker build -t stock-frontend .
+docker run -p 8501:8501 -e API_URL=http://localhost:8000 stock-frontend
+```
+
+### Docker Compose (Desenvolvimento Local)
+
+```bash
+docker-compose up --build
+```
+
+Acesse:
+- Backend: http://localhost:8000
+- Frontend: http://localhost:8501
+- API Docs: http://localhost:8000/docs
 
 ## Testes
 
@@ -602,50 +750,84 @@ Logs estruturados são salvos em:
 
 ```
 previsao_acoes/
-├── src/
-│   ├── api/              # FastAPI application
-│   │   ├── main.py       # Main app
-│   │   ├── schemas.py    # Pydantic models
-│   │   └── routes/       # API routes
-│   ├── data/             # Data handling
+├── railway_app/                    # Aplicação em produção (Railway)
+│   ├── backend/                    # Backend FastAPI
+│   │   ├── main.py                 # Entry point da API
+│   │   ├── routes/                 # API routes
+│   │   │   ├── predictions.py      # Endpoints de previsão
+│   │   │   ├── stocks.py           # Endpoints de ações
+│   │   │   ├── ml_health.py        # ML Health monitoring
+│   │   │   └── websocket.py        # WebSocket real-time
+│   │   ├── services/               # Lógica de negócio
+│   │   │   ├── model_service.py    # Gerenciamento de modelos
+│   │   │   ├── stock_service.py    # Serviço de dados
+│   │   │   ├── ml_health.py        # ML Health monitoring
+│   │   │   ├── monitoring.py       # Métricas de sistema
+│   │   │   └── prometheus_metrics.py
+│   │   ├── core/                   # Modelos ML
+│   │   │   ├── lstm_model.py       # LSTM original
+│   │   │   ├── improved_lstm.py    # LSTM com Attention
+│   │   │   └── preprocessor.py     # Preprocessamento
+│   │   ├── database/               # PostgreSQL
+│   │   │   └── service.py
+│   │   ├── Dockerfile
+│   │   └── requirements.txt
+│   └── frontend/                   # Frontend Streamlit
+│       ├── app.py                  # Dashboard principal
+│       ├── components/
+│       │   └── sidebar.py          # Componentes UI
+│       ├── Dockerfile
+│       └── requirements.txt
+├── src/                            # Código de treino/desenvolvimento
+│   ├── training/                   # Pipeline de treinamento
+│   │   ├── trainer.py              # Trainer básico
+│   │   ├── smart_trainer.py        # Trainer com tuning
+│   │   └── improved_trainer.py     # Trainer avançado
+│   ├── data/                       # Data handling
 │   │   ├── data_loader.py
 │   │   └── preprocessor.py
-│   ├── models/           # ML models
-│   │   └── lstm_model.py
-│   ├── training/         # Training pipeline
-│   │   └── trainer.py
-│   └── utils/            # Utilities
-├── tests/                # Test suite
-├── scripts/              # Utility scripts
-├── config/               # Configuration
-├── models/               # Saved models
-├── data/                 # Data storage
-├── logs/                 # Application logs
-├── Dockerfile            # Docker configuration
-├── docker-compose.yml    # Docker Compose
-├── requirements.txt      # Python dependencies
+│   └── utils/                      # Utilities
+├── tests/                          # Test suite
+│   ├── test_api.py
+│   ├── test_model.py
+│   ├── test_preprocessor.py
+│   └── test_data_loader.py
+├── scripts/                        # Scripts de treino
+│   └── train_model.py
+├── models/                         # Modelos salvos localmente
+│   └── hub_cache/                  # Cache do HuggingFace Hub
+├── data/                           # Data storage
+├── logs/                           # Application logs
+├── .github/workflows/              # CI/CD
+├── docker-compose.yml
 └── README.md
 ```
 
-## Contribuindo
+### Separação Backend/Frontend
 
-Contribuições são bem-vindas! Por favor:
+O projeto usa arquitetura de **microserviços separados**:
 
-1. Fork o projeto
-2. Crie sua feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
+- **Backend (FastAPI)**: API REST, modelos ML, banco de dados
+- **Frontend (Streamlit)**: Dashboard interativo, visualizações
+- **Comunicação**: HTTP REST + WebSocket
+- **Deploy**: Containers Docker independentes no Railway
+
 
 ## Licença
 
 Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
-## Autor
+## Autores
 
-**Seu Nome**
-- GitHub: [@your-username](https://github.com/your-username)
-- LinkedIn: [your-profile](https://linkedin.com/in/your-profile)
+(Adicionar colegas de trabalho)
+github user:Felpz2212 - nome:Felipe Araujo De Almeida
+github user: CECH-Carlos
+nome: Carlos
+
+
+**Henriquebap**
+- GitHub: [@your-username](https://github.com/henriquebap)
+- LinkedIn: [your-profile](https://www.linkedin.com/in/henrique-baptista777/)
 
 ## Agradecimentos
 
