@@ -70,12 +70,12 @@ graph TB
         
         API --> ROUTES{Rotas da API}
         
-        ROUTES --> R1[/api/stocks<br/>- GET /popular/list<br/>- GET /:symbol<br/>- GET /compare]
-        ROUTES --> R2[/api/predictions<br/>- GET /:symbol<br/>- POST /batch<br/>- GET /history]
-        ROUTES --> R3[/api/ml-health<br/>- GET /health/:symbol<br/>- GET /drift-report<br/>- GET /overview<br/>- GET /data-quality<br/>- GET /prediction-distribution]
-        ROUTES --> R4[/api/monitoring<br/>- GET /<br/>- GET /metrics]
-        ROUTES --> R5[/ws<br/>WebSocket real-time]
-        ROUTES --> R6[/metrics<br/>Prometheus format]
+        ROUTES --> R1["/api/stocks<br/>GET /popular/list<br/>GET /:symbol<br/>GET /compare"]
+        ROUTES --> R2["/api/predictions<br/>GET /:symbol<br/>POST /batch<br/>GET /history"]
+        ROUTES --> R3["/api/ml-health<br/>GET /health/:symbol<br/>GET /drift-report<br/>GET /overview<br/>GET /data-quality"]
+        ROUTES --> R4["/api/monitoring<br/>GET /<br/>GET /metrics"]
+        ROUTES --> R5["/ws<br/>WebSocket real-time"]
+        ROUTES --> R6["/metrics<br/>Prometheus format"]
         
         API --> MIDDLEWARE[Middleware<br/>- CORS<br/>- Request timing<br/>- Error handling<br/>- Metrics logging]
     end
