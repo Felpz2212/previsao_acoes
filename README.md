@@ -59,44 +59,320 @@ O modelo é avaliado usando:
 
 ## 🏗️ Arquitetura
 
+### Arquitetura Completa do Sistema
+
+```mermaid
+graph TB
+    subgraph "FRONTEND - Streamlit"
+        UI[Interface Web<br/>Streamlit App]
+        UI --> PAGE1[Página Principal<br/>- Previsões de ações<br/>- Gráficos interativos<br/>- Modo comparação]
+        UI --> PAGE2[Monitoramento<br/>4 Abas especializadas]
+        
+        PAGE2 --> TAB1[Overview<br/>- Uptime & Requests<br/>- Taxa de erro<br/>- CPU/Memória]
+        PAGE2 --> TAB2[Modelos<br/>- Métricas por modelo<br/>- Tempo de inferência<br/>- Accuracy & MAPE]
+        PAGE2 --> TAB3[ML Health<br/>- Health Score 0-100<br/>- Data Drift<br/>- Prediction Analysis<br/>- Alertas automáticos]
+        PAGE2 --> TAB4[Prometheus<br/>- Métricas raw<br/>- Scraping endpoint]
+        
+        PAGE1 --> SIDEBAR[Sidebar<br/>- Busca de ações<br/>- Ações populares<br/>- Período de análise<br/>- Modo comparação]
+    end
+    
+    subgraph "COMUNICAÇÃO"
+        HTTP[HTTP/REST<br/>Requests]
+        WS[WebSocket<br/>Tempo Real]
+    end
+    
+    subgraph "BACKEND - FastAPI"
+        API[FastAPI Application<br/>Python 3.10+]
+        
+        API --> ROUTES{Rotas da API}
+        
+        ROUTES --> R1[/api/stocks<br/>- GET /popular/list<br/>- GET /:symbol<br/>- GET /compare]
+        ROUTES --> R2[/api/predictions<br/>- GET /:symbol<br/>- POST /batch<br/>- GET /history]
+        ROUTES --> R3[/api/ml-health<br/>- GET /health/:symbol<br/>- GET /drift-report<br/>- GET /overview<br/>- GET /data-quality<br/>- GET /prediction-distribution]
+        ROUTES --> R4[/api/monitoring<br/>- GET /<br/>- GET /metrics]
+        ROUTES --> R5[/ws<br/>WebSocket real-time]
+        ROUTES --> R6[/metrics<br/>Prometheus format]
+        
+        API --> MIDDLEWARE[Middleware<br/>- CORS<br/>- Request timing<br/>- Error handling<br/>- Metrics logging]
+    end
+    
+    subgraph "SERVICES - Lógica de Negócio"
+        S1[StockService<br/>- Dados Yahoo Finance<br/>- Cache inteligente<br/>- Indicadores técnicos]
+        
+        S2[ModelService<br/>- Gerencia modelos LSTM<br/>- HuggingFace Hub<br/>- Cache de modelos<br/>- Fallback BASE]
+        
+        S3[MLHealthMonitoring<br/>- Feature drift detection<br/>- Prediction analysis<br/>- Data quality checks<br/>- Health scoring 0-100]
+        
+        S4[MonitoringService<br/>- Coleta métricas<br/>- Request tracking<br/>- System metrics<br/>- Performance KPIs]
+        
+        S5[PrometheusMetrics<br/>- Counter, Gauge, Histogram<br/>- Labels por símbolo<br/>- Formato Prometheus]
+        
+        S6[DatabaseService<br/>- PostgreSQL<br/>- Predictions storage<br/>- Model metrics<br/>- Training logs]
+        
+        S7[EvaluationService<br/>- MAPE calculation<br/>- Model comparison<br/>- Performance tracking]
+    end
+    
+    subgraph "MODELOS ML"
+        M1[LSTMPredictor<br/>Original Architecture<br/>- 2 camadas LSTM<br/>- Dropout 0.2<br/>- PyTorch]
+        
+        M2[ImprovedLSTM<br/>Enhanced Architecture<br/>- 3 camadas LSTM<br/>- Attention mechanism<br/>- Regularização avançada]
+        
+        M3[Preprocessor<br/>- StandardScaler<br/>- Feature engineering<br/>- Sequencing<br/>- Normalização]
+        
+        M4[Modelo BASE<br/>Genérico para<br/>todas as ações]
+        
+        M5[Modelos Específicos<br/>AAPL, GOOGL, MSFT<br/>NVDA, TSLA, etc.]
+    end
+    
+    subgraph "PERSISTÊNCIA"
+        DB[(PostgreSQL<br/>Railway Cloud)]
+        CACHE[Cache em Memória<br/>Modelos carregados<br/>Previsões recentes<br/>Features históricas]
+        HUB[HuggingFace Hub<br/>henriquebap/<br/>stock-predictor-lstm]
+    end
+    
+    subgraph "DADOS EXTERNOS"
+        YAHOO[Yahoo Finance API<br/>yfinance library<br/>Dados históricos<br/>Preços em tempo real]
+    end
+    
+    subgraph "TREINO & AVALIAÇÃO"
+        T1[Trainer<br/>- Training loop<br/>- Validation<br/>- Early stopping]
+        
+        T2[SmartTrainer<br/>- Hyperparameter tuning<br/>- Grid search<br/>- Auto-optimization]
+        
+        T3[ImprovedTrainer<br/>- Advanced techniques<br/>- Learning rate scheduler<br/>- Gradient clipping<br/>- Best model selection]
+        
+        T4[DataLoader<br/>- Batch processing<br/>- Shuffle<br/>- Train/Val split]
+    end
+    
+    subgraph "MONITORAMENTO AVANÇADO"
+        MON1[Infrastructure<br/>- CPU, RAM, Disk<br/>- Request rate<br/>- Response time<br/>- Error rate]
+        
+        MON2[ML Health<br/>- Feature drift Z-score<br/>- Prediction bias<br/>- Data quality score<br/>- Model health 0-100]
+        
+        MON3[Prometheus<br/>- Time-series metrics<br/>- Histograms<br/>- Counters & Gauges<br/>- Multi-label support]
+        
+        MON4[Alertas Automáticos<br/>- Drift detection<br/>- Bias warnings<br/>- Quality issues<br/>- Recomendações]
+    end
+    
+    subgraph "DEPLOY - Railway"
+        BACK_DEPLOY[Backend Container<br/>Docker<br/>Python 3.10<br/>Auto-deploy on push]
+        
+        FRONT_DEPLOY[Frontend Container<br/>Docker<br/>Streamlit<br/>Auto-deploy on push]
+        
+        DB_DEPLOY[PostgreSQL<br/>Managed Database<br/>Railway Cloud]
+    end
+    
+    subgraph "TESTES"
+        TEST1[Unit Tests<br/>pytest<br/>- test_model.py<br/>- test_preprocessor.py<br/>- test_data_loader.py<br/>- test_api.py]
+        
+        TEST2[Integration Tests<br/>- API endpoints<br/>- Model inference<br/>- Database ops]
+    end
+    
+    %% Fluxos principais
+    UI -->|HTTP Requests| HTTP
+    HTTP --> API
+    
+    UI -->|WebSocket| WS
+    WS --> API
+    
+    R1 --> S1
+    R2 --> S1
+    R2 --> S2
+    R3 --> S3
+    R4 --> S4
+    R4 --> S5
+    R6 --> S5
+    
+    S1 --> YAHOO
+    S1 --> CACHE
+    
+    S2 --> M1
+    S2 --> M2
+    S2 --> M3
+    S2 --> M4
+    S2 --> M5
+    S2 --> HUB
+    S2 --> CACHE
+    
+    S3 --> CACHE
+    S3 -.->|Análise| M4
+    S3 -.->|Análise| M5
+    
+    S4 --> CACHE
+    S5 --> CACHE
+    
+    S6 --> DB
+    S7 --> DB
+    
+    T1 --> M1
+    T1 --> M3
+    T2 --> M1
+    T2 --> M3
+    T3 --> M2
+    T3 --> M3
+    
+    T1 --> T4
+    T2 --> T4
+    T3 --> T4
+    
+    M4 --> HUB
+    M5 --> HUB
+    
+    S4 --> MON1
+    S5 --> MON3
+    S3 --> MON2
+    MON2 --> MON4
+    
+    API --> BACK_DEPLOY
+    UI --> FRONT_DEPLOY
+    DB --> DB_DEPLOY
+    
+    %% Styling
+    classDef frontend fill:#667eea,stroke:#764ba2,stroke-width:2px,color:#fff
+    classDef backend fill:#11998e,stroke:#38ef7d,stroke-width:2px,color:#fff
+    classDef ml fill:#f093fb,stroke:#f5576c,stroke-width:2px,color:#fff
+    classDef data fill:#ff416c,stroke:#ff4b2b,stroke-width:2px,color:#fff
+    classDef monitoring fill:#ffd89b,stroke:#19547b,stroke-width:2px,color:#000
+    classDef deploy fill:#a8edea,stroke:#fed6e3,stroke-width:2px,color:#000
+    
+    class UI,PAGE1,PAGE2,TAB1,TAB2,TAB3,TAB4,SIDEBAR frontend
+    class API,ROUTES,R1,R2,R3,R4,R5,R6,MIDDLEWARE backend
+    class S1,S2,S3,S4,S5,S6,S7 backend
+    class M1,M2,M3,M4,M5 ml
+    class T1,T2,T3,T4 ml
+    class DB,CACHE,HUB,YAHOO data
+    class MON1,MON2,MON3,MON4 monitoring
+    class BACK_DEPLOY,FRONT_DEPLOY,DB_DEPLOY deploy
 ```
-┌─────────────────┐
-│   Yahoo Finance │
-│   (Data Source) │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────────────────────────────┐
-│     Data Collection & Processing        │
-│  • Data Loader (yfinance)               │
-│  • Feature Engineering                  │
-│  • Data Preprocessing                   │
-└────────┬────────────────────────────────┘
-         │
-         ▼
-┌─────────────────────────────────────────┐
-│        LSTM Model Training              │
-│  • PyTorch LSTM                         │
-│  • Sequence Generation                  │
-│  • Model Evaluation (MAE, RMSE, MAPE)  │
-└────────┬────────────────────────────────┘
-         │
-         ▼
-┌─────────────────────────────────────────┐
-│        FastAPI REST API                 │
-│  • Prediction Endpoints                 │
-│  • Model Management                     │
-│  • Historical Data Access               │
-│  • Monitoring & Metrics                 │
-└────────┬────────────────────────────────┘
-         │
-         ▼
-┌─────────────────────────────────────────┐
-│        Deployment Options               │
-│  • Railway (Backend + API)              │
-│  • HuggingFace Spaces (UI/Demo)         │
-│  • Docker Containers                    │
-└─────────────────────────────────────────┘
+
+### Arquitetura dos Modelos ML
+
+```mermaid
+graph TB
+    subgraph "HuggingFace Hub - henriquebap/stock-predictor-lstm"
+        HUB[Repository<br/>30 arquivos totais]
+        
+        HUB --> BASE[BASE Model<br/>LSTMPredictor Original<br/>2 LSTM layers<br/>MAPE: 41.46%]
+        
+        HUB --> IMPROVED{ImprovedLSTM Models<br/>3 LSTM Bidirectional<br/>+ Attention Mechanism}
+        
+        IMPROVED --> M1[AAPL<br/>MAPE: 8.28%]
+        IMPROVED --> M2[GOOGL<br/>Otimizado]
+        IMPROVED --> M3[MSFT<br/>Otimizado]
+        IMPROVED --> M4[AMZN<br/>Otimizado]
+        IMPROVED --> M5[META<br/>Otimizado]
+        IMPROVED --> M6[NVDA<br/>Otimizado]
+        IMPROVED --> M7[TSLA<br/>Otimizado]
+        IMPROVED --> M8[JPM<br/>Otimizado]
+        IMPROVED --> M9[V<br/>Otimizado]
+    end
+    
+    subgraph "Backend - ModelService"
+        MS[ModelService<br/>Gerenciador Inteligente]
+        
+        MS --> CACHE{Cache em Memória}
+        MS --> LOADER{Smart Loader}
+        
+        LOADER --> L1[Level 1: Modelo Específico]
+        LOADER --> L2[Level 2: Modelo BASE Fallback]
+        LOADER --> L3[Level 3: Auto-detecção Arquitetura]
+        
+        CACHE --> WARM[Warm Start<br/>BASE pré-carregado]
+        CACHE --> LAZY[Lazy Loading<br/>Sob demanda]
+    end
+    
+    subgraph "Arquiteturas Suportadas"
+        A1[LSTMPredictor<br/>Original<br/>---<br/>• 2 layers LSTM<br/>• Unidirecional<br/>• Dropout 0.2<br/>• Hidden: 50]
+        
+        A2[ImprovedLSTM<br/>Enhanced<br/>---<br/>• 3 layers LSTM<br/>• Bidirectional<br/>• Attention<br/>• Dropout 0.3<br/>• Hidden: 64<br/>• Layer Norm<br/>• Residual]
+    end
+    
+    subgraph "Cada Modelo Inclui"
+        FILES[3 Arquivos por Modelo]
+        FILES --> F1[lstm_model_SYMBOL.pth<br/>Pesos treinados PyTorch]
+        FILES --> F2[scaler_SYMBOL.pkl<br/>StandardScaler treinado]
+        FILES --> F3[metadata_SYMBOL.json<br/>Métricas + Hiperparâmetros]
+    end
+    
+    subgraph "Fluxo de Inferência"
+        REQ[Request<br/>/api/predictions/AAPL]
+        
+        REQ --> CHECK{Está no<br/>Cache?}
+        CHECK -->|Sim| USE_CACHE[Usa Modelo<br/>do Cache]
+        CHECK -->|Não| DOWNLOAD
+        
+        DOWNLOAD[Download do Hub]
+        DOWNLOAD --> TRY1{Modelo<br/>Específico<br/>Existe?}
+        
+        TRY1 -->|Sim| LOAD_SPEC[Carrega<br/>lstm_model_AAPL.pth]
+        TRY1 -->|Não| LOAD_BASE[Carrega<br/>lstm_model_BASE.pth]
+        
+        LOAD_SPEC --> DETECT{Auto-detecção<br/>Arquitetura}
+        LOAD_BASE --> DETECT
+        
+        DETECT --> TRY_IMPROVED[Tenta<br/>ImprovedLSTM]
+        TRY_IMPROVED -->|Sucesso| LOADED_IMP[Carregado]
+        TRY_IMPROVED -->|Falha| TRY_ORIG[Tenta<br/>LSTMPredictor]
+        TRY_ORIG --> LOADED_ORIG[Carregado]
+        
+        LOADED_IMP --> SAVE_CACHE[Salva no Cache]
+        LOADED_ORIG --> SAVE_CACHE
+        USE_CACHE --> PREDICT
+        SAVE_CACHE --> PREDICT[Faz Previsão]
+        
+        PREDICT --> RESPONSE[Retorna JSON]
+    end
+    
+    subgraph "Uso em Produção"
+        PROD[Railway Cloud]
+        
+        PROD --> STARTUP[Startup<br/>Pré-carrega BASE]
+        PROD --> RUNTIME[Runtime<br/>Lazy load outros]
+        
+        STARTUP --> FAST1[Primeira requisição<br/>BASE: ~100ms]
+        RUNTIME --> FAST2[Primeira requisição<br/>Específico: ~2s download]
+        RUNTIME --> FAST3[Próximas requisições<br/>Cache: ~50ms]
+    end
+    
+    subgraph "Modelo Destaque"
+        BEST[AAPL - Apple<br/>---<br/>MAPE: 8.28%<br/>Melhor Performance<br/>---<br/>ImprovedLSTM<br/>3 layers bidirectional<br/>Attention mechanism<br/>Early stopped: epoch 17]
+    end
+    
+    %% Conexões principais
+    HUB -.->|Download| MS
+    MS -.->|Usa| A1
+    MS -.->|Usa| A2
+    BASE -.->|Usa| A1
+    M1 -.->|Usa| A2
+    M2 -.->|Usa| A2
+    M3 -.->|Usa| A2
+    M4 -.->|Usa| A2
+    M5 -.->|Usa| A2
+    M6 -.->|Usa| A2
+    M7 -.->|Usa| A2
+    M8 -.->|Usa| A2
+    M9 -.->|Usa| A2
+    
+    MS --> PROD
+    M1 -.->|É| BEST
+    
+    %% Styling
+    classDef hub fill:#ffd89b,stroke:#19547b,stroke-width:3px,color:#000
+    classDef base fill:#667eea,stroke:#764ba2,stroke-width:2px,color:#fff
+    classDef improved fill:#11998e,stroke:#38ef7d,stroke-width:2px,color:#fff
+    classDef service fill:#f093fb,stroke:#f5576c,stroke-width:2px,color:#fff
+    classDef arch fill:#ff416c,stroke:#ff4b2b,stroke-width:2px,color:#fff
+    classDef best fill:#FFD700,stroke:#FF8C00,stroke-width:4px,color:#000
+    classDef flow fill:#a8edea,stroke:#fed6e3,stroke-width:2px,color:#000
+    
+    class HUB hub
+    class BASE base
+    class IMPROVED,M1,M2,M3,M4,M5,M6,M7,M8,M9 improved
+    class MS,CACHE,LOADER,L1,L2,L3,WARM,LAZY service
+    class A1,A2 arch
+    class BEST best
+    class REQ,CHECK,USE_CACHE,DOWNLOAD,TRY1,LOAD_SPEC,LOAD_BASE,DETECT,TRY_IMPROVED,TRY_ORIG,LOADED_IMP,LOADED_ORIG,SAVE_CACHE,PREDICT,RESPONSE flow
+    class PROD,STARTUP,RUNTIME,FAST1,FAST2,FAST3 flow
 ```
 
 ## ✨ Funcionalidades
