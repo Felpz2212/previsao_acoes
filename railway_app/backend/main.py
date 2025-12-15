@@ -20,7 +20,7 @@ from datetime import datetime
 from loguru import logger
 
 from fastapi.responses import Response
-from routes import predictions, stocks, websocket
+from routes import predictions, stocks, websocket, ml_health
 from services.model_service import ModelService
 from services.monitoring import get_monitoring_service
 from services.model_evaluation import get_evaluation_service
@@ -178,6 +178,7 @@ async def monitoring_middleware(request: Request, call_next):
 app.include_router(stocks.router, prefix="/api/stocks", tags=["Stocks"])
 app.include_router(predictions.router, prefix="/api/predictions", tags=["Predictions"])
 app.include_router(websocket.router, prefix="/ws", tags=["WebSocket"])
+app.include_router(ml_health.router, tags=["ML Health"])
 
 
 @app.get("/")

@@ -238,7 +238,7 @@ def render_monitoring_page():
     st.markdown("---")
     
     # Tabs principais
-    tab1, tab2, tab3 = st.tabs(["📈 Overview", "🧠 Modelos", "📝 Prometheus"])
+    tab1, tab2, tab3, tab4 = st.tabs(["📈 Overview", "🧠 Modelos", "🔬 ML Health", "📝 Prometheus"])
     
     # Buscar dados
     try:
@@ -469,6 +469,155 @@ def render_monitoring_page():
         st.caption("📌 MAPE < 10% é considerado aceitável para previsão de ações")
     
     with tab3:
+        st.markdown("### 🔬 ML Health - Saúde dos Modelos")
+        st.markdown("Métricas instantâneas de saúde dos modelos (sem necessidade de ground truth)")
+        
+        # Seletor de símbolo
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            symbols = ["AAPL", "GOOGL", "MSFT", "NVDA", "TSLA", "AMZN", "META", "JPM", "V"]
+            selected_ml = st.selectbox("Selecione o símbolo", symbols, key="ml_health_symbol")
+        
+        with col2:
+            if st.button("🔄 Atualizar", key="refresh_ml_health"):
+                st.rerun()
+        
+        try:
+            # Buscar health do modelo
+            health_resp = requests.get(f"{API_URL}/api/ml-health/health/{selected_ml}", timeout=10)
+            
+            if health_resp.status_code == 200:
+                health_data = health_resp.json()
+                
+                # Health Score Card
+                score = health_data.get('health_score', 0)
+                status = health_data.get('status', 'unknown')
+                
+                status_colors = {
+                    'healthy': '#11998e, #38ef7d',
+                    'warning': '#f093fb, #f5576c',
+                    'poor': '#ff416c, #ff4b2b',
+                    'critical': '#ff0000, #8b0000'
+                }
+                
+                st.markdown(f"""
+                <div style='background: linear-gradient(135deg, {status_colors.get(status, "#667eea, #764ba2")}); 
+                            padding: 2rem; border-radius: 1rem; text-align: center; margin: 1rem 0;'>
+                    <h3 style='color: white; margin: 0;'>Health Score</h3>
+                    <h1 style='color: white; margin: 0.5rem 0; font-size: 3rem;'>{score}/100</h1>
+                    <p style='color: white; margin: 0; font-size: 1.2rem;'>{status.upper()}</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Recomendação
+                recommendation = health_data.get('recommendation', '')
+                if status == 'healthy':
+                    st.success(f"✅ {recommendation}")
+                elif status == 'warning':
+                    st.warning(f"⚠️ {recommendation}")
+                else:
+                    st.error(f"🚨 {recommendation}")
+                
+                # Prediction Distribution
+                st.markdown("#### 📊 Distribuição de Previsões")
+                pred_dist = health_data['metrics']['prediction_distribution']
+                
+                if pred_dist.get('status') == 'ok':
+                    col1, col2, col3, col4 = st.columns(4)
+                    
+                    with col1:
+                        pos_ratio = pred_dist['positive_ratio']
+                        st.metric("% Positivas", f"{pos_ratio*100:.1f}%")
+                    
+                    with col2:
+                        st.metric("Positivas", pred_dist['positive_count'])
+                    
+                    with col3:
+                        st.metric("Negativas", pred_dist['negative_count'])
+                    
+                    with col4:
+                        st.metric("Magnitude Média", f"{pred_dist['mean_magnitude']:.2f}%")
+                    
+                    # Alertas
+                    if pred_dist.get('alerts'):
+                        st.markdown("##### ⚠️ Alertas Detectados")
+                        for alert in pred_dist['alerts']:
+                            st.warning(alert)
+                    else:
+                        st.success("✅ Distribuição normal - sem alertas")
+                else:
+                    st.info(f"📊 {pred_dist.get('message', 'Dados insuficientes')}")
+                
+                # Prediction Stats
+                st.markdown("#### 📈 Estatísticas de Previsões")
+                pred_stats = health_data['metrics']['prediction_stats']
+                
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.metric("Média", f"{pred_stats['mean']:.2f}%")
+                with col2:
+                    st.metric("Desvio Padrão", f"{pred_stats['std']:.2f}%")
+                with col3:
+                    st.metric("Mínimo", f"{pred_stats['min']:.2f}%")
+                with col4:
+                    st.metric("Máximo", f"{pred_stats['max']:.2f}%")
+                
+            else:
+                st.warning(f"⚠️ Dados não disponíveis para {selected_ml}")
+        
+        except Exception as e:
+            st.error(f"❌ Erro ao carregar ML Health: {e}")
+        
+        # Drift Report
+        st.markdown("---")
+        st.markdown("#### 🔄 Data Drift Report")
+        
+        try:
+            drift_resp = requests.get(f"{API_URL}/api/ml-health/drift-report", timeout=10)
+            
+            if drift_resp.status_code == 200:
+                drift_data = drift_resp.json()
+                summary = drift_data['summary']
+                
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.metric("Símbolos Analisados", summary['symbols_analyzed'])
+                
+                with col2:
+                    drift_count = summary['symbols_with_drift']
+                    st.metric("Com Drift", drift_count)
+                
+                with col3:
+                    drift_ratio = summary['drift_ratio']
+                    st.metric("Taxa de Drift", f"{drift_ratio*100:.1f}%")
+                
+                # Detalhes por símbolo
+                if drift_data['details']:
+                    st.markdown("##### Detalhes por Símbolo")
+                    
+                    for symbol, info in drift_data['details'].items():
+                        if info.get('has_drift'):
+                            with st.expander(f"⚠️ {symbol} - Drift Detectado"):
+                                for drift in info['drifts']:
+                                    severity_emoji = {
+                                        'low': '🟢',
+                                        'medium': '🟡',
+                                        'high': '🟠',
+                                        'critical': '🔴'
+                                    }
+                                    
+                                    st.write(f"{severity_emoji.get(drift['severity'], '⚪')} **{drift['feature']}**: "
+                                           f"z-score = {drift['z_score']} ({drift['severity']})")
+                        else:
+                            st.success(f"✅ {symbol} - Sem drift")
+            else:
+                st.info("📊 Nenhum drift report disponível ainda")
+        
+        except Exception as e:
+            st.error(f"❌ Erro ao carregar drift report: {e}")
+    
+    with tab4:
         st.markdown("### 📝 Métricas Prometheus (Raw)")
         st.markdown("Endpoint: `/metrics` - Formato padrão Prometheus para scraping")
         
@@ -533,24 +682,6 @@ def render_monitoring_page():
                 st.error(f"Erro ao carregar: {e}")
         else:
             st.info("👆 Clique no botão acima para carregar as métricas Prometheus")
-        
-        # Info sobre integração
-        st.markdown("---")
-        st.markdown("### 🔗 Integração com Grafana Cloud")
-        st.markdown(f"""
-        Para visualizar no Grafana Cloud, configure o scraping:
-        
-        ```yaml
-        scrape_configs:
-          - job_name: 'stock-predictor'
-            static_configs:
-              - targets: ['previsaoacoes-back-production.up.railway.app']
-            scheme: https
-            metrics_path: '/metrics'
-        ```
-        
-        **Endpoint direto**: `{API_URL}/metrics`
-        """)
 
 
 def main():
