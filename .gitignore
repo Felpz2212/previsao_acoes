@@ -72,7 +72,7 @@ htmlcov/
 .pytest_cache/
 
 # Docker
-.dockerignore
+# .dockerignore - DEVE ser versionado para builds consistentes
 
 # HuggingFace Hub cache
 models/hub_cache/
@@ -85,3 +85,7 @@ railway_app/frontend/__pycache__/
 reports/*.txt
 reports/*.json
 !reports/AVALIACAO_MODELOS.md
+docs/prometheus info.txt
+
+# Documentação interna (uso privado)
+docs/

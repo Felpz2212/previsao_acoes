@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Environment variables
+.env
+
+# Git
+.git/
+.gitignore
+
+# Data and models (copy only if needed)
+data/raw/*.csv
+data/processed/*.csv
+
+# Logs
+logs/*.log
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Documentation
+docs/
+*.md
+*.pdf
+
+# Notebooks
+notebooks/
+*.ipynb
+
+# CI/CD
+.github/
+

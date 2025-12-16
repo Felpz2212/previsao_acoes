@@ -52,23 +52,21 @@ def render_sidebar() -> Tuple[str, int, bool, List[str]]:
     with st.sidebar:
         st.markdown("## 🔍 Buscar Ação")
         
-        # Input de busca - valor inicial do session_state
+        # Input de busca - carregamento automático
         search_input = st.text_input(
             "Ticker ou Nome",
-            value=st.session_state.get('selected_symbol', ''),
             placeholder="Ex: AAPL, Apple, Petrobras",
             key="search_input_field"
         )
         
-        # Atualizar symbol baseado no input
+        # Resolver símbolo e carregar automaticamente
         if search_input:
             selected_symbol = resolve_symbol(search_input)
-            if selected_symbol != st.session_state.get('selected_symbol'):
-                st.session_state['selected_symbol'] = selected_symbol
+            st.session_state['selected_symbol'] = selected_symbol
         else:
             selected_symbol = st.session_state.get('selected_symbol', '')
         
-        # Mostrar selecionado
+        # Mostrar símbolo selecionado
         if selected_symbol:
             st.success(f"✅ Selecionado: **{selected_symbol}**")
         
@@ -118,8 +116,12 @@ def render_sidebar() -> Tuple[str, int, bool, List[str]]:
                 cols = st.columns(2)
                 for i, ticker in enumerate(tickers):
                     with cols[i % 2]:
-                        if st.button(ticker, key=f"btn_{ticker}", use_container_width=True):
-                            # Atualizar session_state e forcar rerun
+                        # Checkmark se for o selecionado
+                        is_selected = ticker == st.session_state.get('selected_symbol')
+                        button_label = f"✓ {ticker}" if is_selected else ticker
+                        
+                        if st.button(button_label, key=f"btn_{ticker}", use_container_width=True):
+                            # Selecionar e recarregar
                             st.session_state['selected_symbol'] = ticker
                             st.rerun()
         

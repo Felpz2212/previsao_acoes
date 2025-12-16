@@ -126,13 +126,21 @@ async def get_available_stocks():
         
         available_stocks = []
         for metadata_file in metadata_files:
-            with open(metadata_file, 'r') as f:
-                metadata = json.load(f)
-                available_stocks.append({
-                    'symbol': metadata['symbol'],
-                    'trained_at': metadata['trained_at'],
-                    'metrics': metadata.get('metrics', {})
-                })
+            try:
+                with open(metadata_file, 'r') as f:
+                    metadata = json.load(f)
+                    # Extrair symbol do nome do arquivo se não estiver no metadata
+                    symbol = metadata.get('symbol')
+                    if not symbol:
+                        # metadata_AAPL.json -> AAPL
+                        symbol = metadata_file.stem.replace('metadata_', '')
+                    available_stocks.append({
+                        'symbol': symbol,
+                        'trained_at': metadata.get('trained_at', 'unknown'),
+                        'metrics': metadata.get('metrics', {})
+                    })
+            except (json.JSONDecodeError, IOError) as e:
+                logger.warning(f"Error reading {metadata_file}: {e}")
         
         return {
             'stocks': available_stocks,

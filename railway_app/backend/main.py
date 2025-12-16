@@ -19,10 +19,12 @@ import asyncio
 from datetime import datetime
 from loguru import logger
 
-from routes import predictions, stocks, websocket
+from fastapi.responses import Response
+from routes import predictions, stocks, websocket, ml_health
 from services.model_service import ModelService
 from services.monitoring import get_monitoring_service
 from services.model_evaluation import get_evaluation_service
+from services.prometheus_metrics import get_prometheus_metrics as get_prom_metrics
 
 # Database (opcional)
 try:
@@ -129,21 +131,23 @@ async def monitoring_middleware(request: Request, call_next):
     response = await call_next(request)
     
     # Calcular tempo de resposta
-    response_time_ms = (time.time() - start_time) * 1000
+    duration_seconds = time.time() - start_time
+    response_time_ms = duration_seconds * 1000
     
-    # Registrar métrica
+    # Registrar métricas internas
     monitoring = getattr(request.app.state, 'monitoring', None)
+    path = request.url.path
+    
+    # Extrair symbol se for endpoint de previsão
+    symbol = None
+    if '/predictions/' in path:
+        parts = path.split('/')
+        for i, part in enumerate(parts):
+            if part == 'predictions' and i + 1 < len(parts):
+                symbol = parts[i + 1].upper()
+                break
+    
     if monitoring:
-        # Extrair symbol se for endpoint de previsão
-        symbol = None
-        path = request.url.path
-        if '/predictions/' in path:
-            parts = path.split('/')
-            for i, part in enumerate(parts):
-                if part == 'predictions' and i + 1 < len(parts):
-                    symbol = parts[i + 1].upper()
-                    break
-        
         monitoring.record_request(
             endpoint=path,
             method=request.method,
@@ -151,6 +155,18 @@ async def monitoring_middleware(request: Request, call_next):
             response_time_ms=response_time_ms,
             symbol=symbol
         )
+    
+    # Registrar métricas Prometheus
+    try:
+        prom = get_prom_metrics()
+        prom.record_request(
+            method=request.method,
+            endpoint=path,
+            status=response.status_code,
+            duration_seconds=duration_seconds
+        )
+    except Exception:
+        pass  # Não falhar se Prometheus não disponível
     
     # Adicionar header com tempo de resposta
     response.headers["X-Response-Time-Ms"] = str(round(response_time_ms, 2))
@@ -162,6 +178,7 @@ async def monitoring_middleware(request: Request, call_next):
 app.include_router(stocks.router, prefix="/api/stocks", tags=["Stocks"])
 app.include_router(predictions.router, prefix="/api/predictions", tags=["Predictions"])
 app.include_router(websocket.router, prefix="/ws", tags=["WebSocket"])
+app.include_router(ml_health.router, tags=["ML Health"])
 
 
 @app.get("/")
@@ -323,12 +340,51 @@ async def get_system_metrics():
     }
 
 
-@app.get("/api/monitoring/prometheus", tags=["Monitoring"])
-async def get_prometheus_metrics():
+@app.get("/metrics", tags=["Monitoring"])
+async def prometheus_metrics_endpoint():
     """
-    Métricas em formato Prometheus.
+    Endpoint padrão Prometheus para scraping de métricas.
+    
+    Formato: Prometheus text exposition format
+    
+    Use este endpoint para integração com Prometheus/Grafana.
+    Configure no prometheus.yml:
+    ```yaml
+    scrape_configs:
+      - job_name: 'stock-predictor'
+        static_configs:
+          - targets: ['your-api-url:8000']
+        metrics_path: '/metrics'
+    ```
+    """
+    try:
+        prom = get_prom_metrics()
+        
+        # Atualizar contagem de modelos carregados
+        if hasattr(app.state, 'model_service'):
+            models_loaded = len(app.state.model_service.model_cache)
+            prom.set_models_loaded(models_loaded)
+        
+        metrics_data = prom.get_metrics()
+        return Response(
+            content=metrics_data,
+            media_type=prom.get_content_type()
+        )
+    except Exception as e:
+        logger.error(f"Erro ao gerar métricas Prometheus: {e}")
+        return Response(
+            content=f"# Error generating metrics: {e}",
+            media_type="text/plain"
+        )
+
+
+@app.get("/api/monitoring/prometheus", tags=["Monitoring"])
+async def get_prometheus_metrics_legacy():
+    """
+    Métricas em formato Prometheus (formato legado).
     
     Pode ser usado para integração com Grafana/Prometheus.
+    Recomendado usar /metrics para scraping automático.
     """
     monitoring = getattr(app.state, 'monitoring', None)
     if not monitoring:

@@ -112,5 +112,5 @@ class ErrorResponse(BaseModel):
     """Error response."""
     error: str
     detail: Optional[str] = None
-    timestamp: datetime
+    timestamp: str  # ISO format string for JSON serialization
 

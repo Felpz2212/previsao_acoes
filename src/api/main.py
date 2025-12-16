@@ -84,8 +84,8 @@ async def add_process_time_and_metrics(request: Request, call_next):
             content=ErrorResponse(
                 error="Internal Server Error",
                 detail=str(e),
-                timestamp=datetime.now()
-            ).dict()
+                timestamp=datetime.now().isoformat()
+            ).model_dump()
         )
     
     finally:
@@ -101,8 +101,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content=ErrorResponse(
             error="Validation Error",
             detail=str(exc),
-            timestamp=datetime.now()
-        ).dict()
+            timestamp=datetime.now().isoformat()
+        ).model_dump()
     )
 
 
@@ -115,8 +115,8 @@ async def general_exception_handler(request: Request, exc: Exception):
         content=ErrorResponse(
             error="Internal Server Error",
             detail=str(exc),
-            timestamp=datetime.now()
-        ).dict()
+            timestamp=datetime.now().isoformat()
+        ).model_dump()
     )
 
 

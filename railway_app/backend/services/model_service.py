@@ -87,17 +87,48 @@ class ModelService:
                     logger.error(f"❌ Falha ao carregar modelo BASE: {e2}")
                     return None
         
-        # Detectar tipo do modelo e carregar
+        # Detectar tipo do modelo e carregar com fallback robusto
+        model = None
+        model_type = 'unknown'
+        
         try:
-            model_type = detect_model_type(model_path)
-            logger.info(f"🔎 Tipo detectado: {model_type}")
+            # Primeiro, detectar tipo
+            detected_type = detect_model_type(model_path)
+            logger.info(f"🔎 Tipo detectado: {detected_type}")
             
-            if model_type == 'improved':
-                model = ImprovedLSTMPredictor.load(model_path)
-                logger.info(f"✅ Carregado como ImprovedLSTMPredictor")
+            # Tentar carregar com o tipo detectado
+            if detected_type == 'improved':
+                try:
+                    model = ImprovedLSTMPredictor.load(model_path)
+                    model_type = 'improved'
+                    logger.info(f"✅ Carregado como ImprovedLSTMPredictor")
+                except Exception as e1:
+                    logger.warning(f"⚠️ Falha ao carregar como Improved: {e1}")
+                    # Fallback para original
+                    try:
+                        model = LSTMPredictor.load(model_path)
+                        model_type = 'original'
+                        logger.info(f"✅ Fallback: Carregado como LSTMPredictor")
+                    except Exception as e2:
+                        logger.error(f"❌ Fallback também falhou: {e2}")
             else:
-                model = LSTMPredictor.load(model_path)
-                logger.info(f"✅ Carregado como LSTMPredictor")
+                try:
+                    model = LSTMPredictor.load(model_path)
+                    model_type = 'original'
+                    logger.info(f"✅ Carregado como LSTMPredictor")
+                except Exception as e1:
+                    logger.warning(f"⚠️ Falha ao carregar como Original: {e1}")
+                    # Fallback para improved
+                    try:
+                        model = ImprovedLSTMPredictor.load(model_path)
+                        model_type = 'improved'
+                        logger.info(f"✅ Fallback: Carregado como ImprovedLSTMPredictor")
+                    except Exception as e2:
+                        logger.error(f"❌ Fallback também falhou: {e2}")
+            
+            if model is None:
+                logger.error(f"❌ Não foi possível carregar modelo para {symbol}")
+                return None
             
             preprocessor = StockDataPreprocessor.load(scaler_path)
             
@@ -111,7 +142,7 @@ class ModelService:
                 'symbol_requested': symbol
             }
         except Exception as e:
-            logger.error(f"❌ Erro ao carregar modelo: {e}")
+            logger.error(f"❌ Erro crítico ao carregar modelo: {e}")
             return None
     
     def get_model(self, symbol: str) -> Optional[dict]:

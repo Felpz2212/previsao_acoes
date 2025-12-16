@@ -6,12 +6,17 @@ import numpy as np
 import torch
 from src.models.lstm_model import LSTMModel, LSTMPredictor
 
-# Tentar importar ImprovedLSTMPredictor (pode não existir no ambiente de teste)
+# Tentar importar ImprovedLSTMPredictor (versão completa com fit())
 try:
-    from railway_app.backend.core.improved_lstm import ImprovedLSTMPredictor
+    from src.training.improved_trainer import ImprovedLSTMPredictor
     HAS_IMPROVED = True
 except ImportError:
-    HAS_IMPROVED = False
+    # Fallback para versão simplificada (sem fit)
+    try:
+        from railway_app.backend.core.improved_lstm import ImprovedLSTMPredictor
+        HAS_IMPROVED = True
+    except ImportError:
+        HAS_IMPROVED = False
 
 
 def test_lstm_model_initialization():

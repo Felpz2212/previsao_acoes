@@ -1,0 +1,18 @@
+{
+  "sequence_length": 60,
+  "features": [
+    "return_1d",
+    "return_5d",
+    "return_20d",
+    "volume_change",
+    "return_ma_5",
+    "return_ma_20",
+    "return_std_5",
+    "return_std_20",
+    "rsi",
+    "price_ma_ratio_7",
+    "price_ma_ratio_30",
+    "hl_range"
+  ],
+  "type": "returns"
+}

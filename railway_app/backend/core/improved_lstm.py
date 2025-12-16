@@ -161,17 +161,44 @@ class ImprovedLSTMPredictor:
 
 
 def detect_model_type(checkpoint_path: Path) -> str:
-    """Detecta se o modelo é original ou melhorado."""
-    checkpoint = torch.load(checkpoint_path, map_location='cpu')
+    """
+    Detecta se o modelo é original ou melhorado.
     
-    # Se tem 'bidirectional', é modelo melhorado
-    if 'bidirectional' in checkpoint:
-        return 'improved'
-    
-    # Se state_dict tem 'attention', é modelo melhorado
-    state_dict = checkpoint.get('model_state_dict', {})
-    if any('attention' in k for k in state_dict.keys()):
-        return 'improved'
-    
-    return 'original'
+    Criterios de deteccao:
+    1. Presenca de 'bidirectional' no checkpoint = improved
+    2. Presenca de 'attention' nas keys do state_dict = improved
+    3. Presenca de pesos '_reverse' (LSTM bidirecional) = improved
+    4. Caso contrario = original
+    """
+    try:
+        checkpoint = torch.load(checkpoint_path, map_location='cpu')
+        
+        # Criterio 1: Flag bidirectional explícito
+        if checkpoint.get('bidirectional', False):
+            logger.info(f"🔎 Detectado: improved (flag bidirectional)")
+            return 'improved'
+        
+        # Criterio 2 e 3: Verificar state_dict
+        state_dict = checkpoint.get('model_state_dict', {})
+        keys = list(state_dict.keys())
+        
+        # Presenca de attention layer
+        has_attention = any('attention' in k for k in keys)
+        
+        # Presenca de pesos reversos (LSTM bidirecional)
+        has_reverse = any('_reverse' in k for k in keys)
+        
+        # Presenca de BatchNorm no fc (arquitetura improved)
+        has_batchnorm = any('fc.1.running_mean' in k for k in keys)
+        
+        if has_attention or has_reverse or has_batchnorm:
+            logger.info(f"🔎 Detectado: improved (attention={has_attention}, reverse={has_reverse}, bn={has_batchnorm})")
+            return 'improved'
+        
+        logger.info(f"🔎 Detectado: original")
+        return 'original'
+        
+    except Exception as e:
+        logger.warning(f"⚠️ Erro ao detectar tipo de modelo: {e}")
+        return 'original'  # Fallback seguro
 

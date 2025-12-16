@@ -1,0 +1,21 @@
+{
+  "symbol": "NVDA",
+  "model_type": "returns",
+  "trained_at": "2025-12-08T15:58:39.756835",
+  "data_range": "2021-01-01 to 2025-12-08",
+  "samples": 1148,
+  "metrics": {
+    "mae_returns": 0.01904606632888317,
+    "rmse_returns": 0.027679363265633583,
+    "directional_accuracy": 0.5606936416184971,
+    "correlation": 0.05726757267095177,
+    "mape_equivalent": 1.904606580734253
+  },
+  "architecture": {
+    "type": "LSTM",
+    "hidden_size": 64,
+    "num_layers": 2,
+    "bidirectional": true,
+    "attention": true
+  }
+}

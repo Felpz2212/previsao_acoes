@@ -1,0 +1,21 @@
+{
+  "symbol": "GOOGL",
+  "model_type": "returns",
+  "trained_at": "2025-12-08T15:58:25.279662",
+  "data_range": "2021-01-01 to 2025-12-08",
+  "samples": 1148,
+  "metrics": {
+    "mae_returns": 0.014976534992456436,
+    "rmse_returns": 0.02099248580634594,
+    "directional_accuracy": 0.4277456647398844,
+    "correlation": 0.05119860483036168,
+    "mape_equivalent": 1.4976534843444824
+  },
+  "architecture": {
+    "type": "LSTM",
+    "hidden_size": 64,
+    "num_layers": 2,
+    "bidirectional": true,
+    "attention": true
+  }
+}
