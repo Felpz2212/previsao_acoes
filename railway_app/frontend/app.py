@@ -28,46 +28,154 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# CSS customizado
+# CSS customizado - UI MODERNA
 st.markdown("""
 <style>
+    /* Header principal */
     .main-header {
-        font-size: 2.5rem;
-        font-weight: 700;
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        font-size: 2.8rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin-bottom: 0;
+        text-align: center;
+        animation: gradient 3s ease infinite;
     }
+    
     .sub-header {
-        color: #888;
-        font-size: 1.1rem;
-        margin-top: 0;
+        color: #aaa;
+        font-size: 1.2rem;
+        margin-top: 0.5rem;
+        text-align: center;
+        font-weight: 300;
     }
+    
+    /* Cards de métrica */
     .metric-card {
         background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         padding: 1.5rem;
         border-radius: 1rem;
         border: 1px solid #333;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        transition: transform 0.2s, box-shadow 0.2s;
     }
+    
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    /* Botões estilizados */
+    .stButton>button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white !important;
+        border: none;
+        padding: 0.6rem 2rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+    
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+    }
+    
+    .stButton>button:active {
+        transform: translateY(0);
+    }
+    
+    /* Botão primário especial */
+    button[kind="primary"] {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+    }
+    
+    /* Cards de previsão */
     .prediction-up {
         color: #00ff88;
         font-weight: bold;
+        text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
     }
+    
     .prediction-down {
         color: #ff4757;
         font-weight: bold;
+        text-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
     }
-    .stButton>button {
-        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        padding: 0.5rem 2rem;
+    
+    /* Loading spinner customizado */
+    .stSpinner > div {
+        border-top-color: #667eea !important;
+    }
+    
+    /* Expander estilizado */
+    .streamlit-expanderHeader {
+        background: linear-gradient(90deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
         border-radius: 0.5rem;
         font-weight: 600;
     }
-    .stButton>button:hover {
-        opacity: 0.9;
+    
+    /* Info boxes */
+    .stAlert {
+        border-radius: 0.75rem;
+        border-left: 4px solid #667eea;
+    }
+    
+    /* Sidebar melhorada */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #0f0f1e 0%, #1a1a2e 100%);
+    }
+    
+    /* Animações suaves */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .element-container {
+        animation: fadeIn 0.3s ease-out;
+    }
+    
+    /* Status badge */
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin: 0.5rem 0;
+    }
+    
+    .status-success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        color: white;
+    }
+    
+    .status-warning {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+    
+    /* Scrollbar customizada */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+    
+    ::-webkit-scrollbar-track {
+        background: #1a1a2e;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 5px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -130,7 +238,7 @@ def render_monitoring_page():
     st.markdown("---")
     
     # Tabs principais
-    tab1, tab2, tab3 = st.tabs(["📈 Overview", "🧠 Modelos", "📝 Prometheus"])
+    tab1, tab2, tab3, tab4 = st.tabs(["📈 Overview", "🧠 Modelos", "🔬 ML Health", "📝 Prometheus"])
     
     # Buscar dados
     try:
@@ -361,6 +469,155 @@ def render_monitoring_page():
         st.caption("📌 MAPE < 10% é considerado aceitável para previsão de ações")
     
     with tab3:
+        st.markdown("### 🔬 ML Health - Saúde dos Modelos")
+        st.markdown("Métricas instantâneas de saúde dos modelos (sem necessidade de ground truth)")
+        
+        # Seletor de símbolo
+        col1, col2 = st.columns([3, 1])
+        with col1:
+            symbols = ["AAPL", "GOOGL", "MSFT", "NVDA", "TSLA", "AMZN", "META", "JPM", "V"]
+            selected_ml = st.selectbox("Selecione o símbolo", symbols, key="ml_health_symbol")
+        
+        with col2:
+            if st.button("🔄 Atualizar", key="refresh_ml_health"):
+                st.rerun()
+        
+        try:
+            # Buscar health do modelo
+            health_resp = requests.get(f"{API_URL}/api/ml-health/health/{selected_ml}", timeout=10)
+            
+            if health_resp.status_code == 200:
+                health_data = health_resp.json()
+                
+                # Health Score Card
+                score = health_data.get('health_score', 0)
+                status = health_data.get('status', 'unknown')
+                
+                status_colors = {
+                    'healthy': '#11998e, #38ef7d',
+                    'warning': '#f093fb, #f5576c',
+                    'poor': '#ff416c, #ff4b2b',
+                    'critical': '#ff0000, #8b0000'
+                }
+                
+                st.markdown(f"""
+                <div style='background: linear-gradient(135deg, {status_colors.get(status, "#667eea, #764ba2")}); 
+                            padding: 2rem; border-radius: 1rem; text-align: center; margin: 1rem 0;'>
+                    <h3 style='color: white; margin: 0;'>Health Score</h3>
+                    <h1 style='color: white; margin: 0.5rem 0; font-size: 3rem;'>{score}/100</h1>
+                    <p style='color: white; margin: 0; font-size: 1.2rem;'>{status.upper()}</p>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # Recomendação
+                recommendation = health_data.get('recommendation', '')
+                if status == 'healthy':
+                    st.success(f"✅ {recommendation}")
+                elif status == 'warning':
+                    st.warning(f"⚠️ {recommendation}")
+                else:
+                    st.error(f"🚨 {recommendation}")
+                
+                # Prediction Distribution
+                st.markdown("#### 📊 Distribuição de Previsões")
+                pred_dist = health_data['metrics']['prediction_distribution']
+                
+                if pred_dist.get('status') == 'ok':
+                    col1, col2, col3, col4 = st.columns(4)
+                    
+                    with col1:
+                        pos_ratio = pred_dist['positive_ratio']
+                        st.metric("% Positivas", f"{pos_ratio*100:.1f}%")
+                    
+                    with col2:
+                        st.metric("Positivas", pred_dist['positive_count'])
+                    
+                    with col3:
+                        st.metric("Negativas", pred_dist['negative_count'])
+                    
+                    with col4:
+                        st.metric("Magnitude Média", f"{pred_dist['mean_magnitude']:.2f}%")
+                    
+                    # Alertas
+                    if pred_dist.get('alerts'):
+                        st.markdown("##### ⚠️ Alertas Detectados")
+                        for alert in pred_dist['alerts']:
+                            st.warning(alert)
+                    else:
+                        st.success("✅ Distribuição normal - sem alertas")
+                else:
+                    st.info(f"📊 {pred_dist.get('message', 'Dados insuficientes')}")
+                
+                # Prediction Stats
+                st.markdown("#### 📈 Estatísticas de Previsões")
+                pred_stats = health_data['metrics']['prediction_stats']
+                
+                col1, col2, col3, col4 = st.columns(4)
+                with col1:
+                    st.metric("Média", f"{pred_stats['mean']:.2f}%")
+                with col2:
+                    st.metric("Desvio Padrão", f"{pred_stats['std']:.2f}%")
+                with col3:
+                    st.metric("Mínimo", f"{pred_stats['min']:.2f}%")
+                with col4:
+                    st.metric("Máximo", f"{pred_stats['max']:.2f}%")
+                
+            else:
+                st.warning(f"⚠️ Dados não disponíveis para {selected_ml}")
+        
+        except Exception as e:
+            st.error(f"❌ Erro ao carregar ML Health: {e}")
+        
+        # Drift Report
+        st.markdown("---")
+        st.markdown("#### 🔄 Data Drift Report")
+        
+        try:
+            drift_resp = requests.get(f"{API_URL}/api/ml-health/drift-report", timeout=10)
+            
+            if drift_resp.status_code == 200:
+                drift_data = drift_resp.json()
+                summary = drift_data['summary']
+                
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.metric("Símbolos Analisados", summary['symbols_analyzed'])
+                
+                with col2:
+                    drift_count = summary['symbols_with_drift']
+                    st.metric("Com Drift", drift_count)
+                
+                with col3:
+                    drift_ratio = summary['drift_ratio']
+                    st.metric("Taxa de Drift", f"{drift_ratio*100:.1f}%")
+                
+                # Detalhes por símbolo
+                if drift_data['details']:
+                    st.markdown("##### Detalhes por Símbolo")
+                    
+                    for symbol, info in drift_data['details'].items():
+                        if info.get('has_drift'):
+                            with st.expander(f"⚠️ {symbol} - Drift Detectado"):
+                                for drift in info['drifts']:
+                                    severity_emoji = {
+                                        'low': '🟢',
+                                        'medium': '🟡',
+                                        'high': '🟠',
+                                        'critical': '🔴'
+                                    }
+                                    
+                                    st.write(f"{severity_emoji.get(drift['severity'], '⚪')} **{drift['feature']}**: "
+                                           f"z-score = {drift['z_score']} ({drift['severity']})")
+                        else:
+                            st.success(f"✅ {symbol} - Sem drift")
+            else:
+                st.info("📊 Nenhum drift report disponível ainda")
+        
+        except Exception as e:
+            st.error(f"❌ Erro ao carregar drift report: {e}")
+    
+    with tab4:
         st.markdown("### 📝 Métricas Prometheus (Raw)")
         st.markdown("Endpoint: `/metrics` - Formato padrão Prometheus para scraping")
         
@@ -425,24 +682,6 @@ def render_monitoring_page():
                 st.error(f"Erro ao carregar: {e}")
         else:
             st.info("👆 Clique no botão acima para carregar as métricas Prometheus")
-        
-        # Info sobre integração
-        st.markdown("---")
-        st.markdown("### 🔗 Integração com Grafana Cloud")
-        st.markdown(f"""
-        Para visualizar no Grafana Cloud, configure o scraping:
-        
-        ```yaml
-        scrape_configs:
-          - job_name: 'stock-predictor'
-            static_configs:
-              - targets: ['previsaoacoes-back-production.up.railway.app']
-            scheme: https
-            metrics_path: '/metrics'
-        ```
-        
-        **Endpoint direto**: `{API_URL}/metrics`
-        """)
 
 
 def main():
@@ -457,17 +696,22 @@ def main():
         render_monitoring_page()
         return
     
-    # Header
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        st.markdown('<h1 class="main-header">📈 Stock Predictor</h1>', unsafe_allow_html=True)
-        st.markdown('<p class="sub-header">Previsão de preços com Deep Learning (LSTM)</p>', unsafe_allow_html=True)
+    # Header aprimorado
+    st.markdown('<h1 class="main-header">📈 Stock Predictor LSTM</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="sub-header">Previsão de preços com Deep Learning • FIAP Pós-Tech ML Engineering</p>', unsafe_allow_html=True)
+    
+    col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.markdown(f"<p style='text-align: right; color: #888;'>🕐 {datetime.now().strftime('%H:%M:%S')}</p>", unsafe_allow_html=True)
+        st.markdown(f"""
+        <div style='text-align: center; padding: 0.5rem; background: rgba(102, 126, 234, 0.1); 
+                    border-radius: 0.5rem; margin: 1rem 0;'>
+            <span style='color: #888; font-size: 0.9rem;'>🕐 {datetime.now().strftime('%d/%m/%Y • %H:%M:%S')}</span>
+        </div>
+        """, unsafe_allow_html=True)
     
     st.markdown("---")
     
-    # Sidebar
+    # Sidebar - carregamento automático
     selected_symbol, selected_days, compare_mode, compare_symbols = render_sidebar()
     
     # Main content
@@ -504,76 +748,146 @@ def main():
     else:
         # Modo normal - uma ação
         if selected_symbol:
+            # Banner com símbolo selecionado
+            st.markdown(f"""
+            <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                        padding: 1rem; border-radius: 1rem; margin-bottom: 1rem; text-align: center;'>
+                <h2 style='color: white; margin: 0;'>📊 {selected_symbol}</h2>
+                <p style='color: rgba(255,255,255,0.8); margin: 0.25rem 0 0 0; font-size: 0.9rem;'>
+                    Período: {selected_days} dias
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+            
             col1, col2 = st.columns([2, 1])
             
             with col1:
-                st.subheader(f"📊 {selected_symbol}")
-                
-                # Obter dados
-                with st.spinner("Carregando dados..."):
+                # Obter dados com loading bonito
+                with st.spinner(f"🔄 Carregando dados de {selected_symbol}..."):
                     stock_data = get_stock_data(selected_symbol, selected_days)
                 
                 if stock_data:
-                    # Gráfico
+                    # Gráfico principal
+                    st.markdown("### 📈 Histórico de Preços")
                     df = pd.DataFrame(stock_data['data'])
                     fig = create_candlestick_chart(df, selected_symbol)
                     st.plotly_chart(fig, use_container_width=True)
                     
-                    # Indicadores
+                    # Indicadores técnicos em cards bonitos
+                    st.markdown("### 📊 Indicadores Técnicos")
                     indicators = stock_data.get('indicators', {})
                     ind_cols = st.columns(4)
                     
                     with ind_cols[0]:
-                        st.metric("MA 7", f"${indicators.get('ma_7', 0):.2f}")
+                        st.markdown("""
+                        <div class='metric-card'>
+                            <p style='color: #888; margin: 0; font-size: 0.85rem;'>MA 7 Dias</p>
+                            <h3 style='margin: 0.25rem 0; color: #ffa502;'>$""" + f"{indicators.get('ma_7', 0):.2f}" + """</h3>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
                     with ind_cols[1]:
-                        st.metric("MA 30", f"${indicators.get('ma_30', 0):.2f}")
+                        st.markdown("""
+                        <div class='metric-card'>
+                            <p style='color: #888; margin: 0; font-size: 0.85rem;'>MA 30 Dias</p>
+                            <h3 style='margin: 0.25rem 0; color: #3742fa;'>$""" + f"{indicators.get('ma_30', 0):.2f}" + """</h3>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
                     with ind_cols[2]:
-                        st.metric("Volatilidade", f"${indicators.get('volatility', 0):.2f}")
+                        st.markdown("""
+                        <div class='metric-card'>
+                            <p style='color: #888; margin: 0; font-size: 0.85rem;'>Volatilidade</p>
+                            <h3 style='margin: 0.25rem 0; color: #ff6348;'>$""" + f"{indicators.get('volatility', 0):.2f}" + """</h3>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
                     with ind_cols[3]:
                         trend = indicators.get('trend', 'up')
-                        st.metric("Tendência", "📈 Alta" if trend == 'up' else "📉 Baixa")
+                        trend_color = "#00ff88" if trend == 'up' else "#ff4757"
+                        trend_icon = "📈" if trend == 'up' else "📉"
+                        trend_text = "Alta" if trend == 'up' else "Baixa"
+                        st.markdown(f"""
+                        <div class='metric-card'>
+                            <p style='color: #888; margin: 0; font-size: 0.85rem;'>Tendência</p>
+                            <h3 style='margin: 0.25rem 0; color: {trend_color};'>{trend_icon} {trend_text}</h3>
+                        </div>
+                        """, unsafe_allow_html=True)
                 else:
-                    st.error(f"Não foi possível obter dados para {selected_symbol}")
+                    st.error(f"❌ Não foi possível obter dados para {selected_symbol}")
+                    st.info("💡 Tente novamente ou selecione outra ação")
             
             with col2:
-                st.subheader("🔮 Previsão LSTM")
+                # Card de previsão estilizado
+                st.markdown("""
+                <div style='background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+                            padding: 1.5rem; border-radius: 1rem; border: 1px solid rgba(102, 126, 234, 0.3);'>
+                    <h3 style='margin: 0 0 1rem 0;'>🔮 Previsão LSTM</h3>
+                </div>
+                """, unsafe_allow_html=True)
                 
-                if st.button("🚀 Fazer Previsão", use_container_width=True):
-                    with st.spinner("Calculando previsão..."):
+                st.markdown("<br>", unsafe_allow_html=True)
+                
+                if st.button("🚀 Fazer Previsão", use_container_width=True, type="primary"):
+                    with st.spinner("🧠 Calculando previsão com modelo LSTM..."):
                         prediction = get_prediction(selected_symbol)
                     
                     if prediction:
+                        st.success("✅ Previsão concluída!")
                         render_prediction_card(prediction)
                     else:
-                        st.error("Erro ao obter previsão")
+                        st.error("❌ Erro ao obter previsão")
+                        st.info("💡 Tente novamente em alguns instantes")
                 
-                # Info do modelo
+                # Info do modelo em card
                 st.markdown("---")
-                st.markdown("### 🧠 Sobre o Modelo")
                 st.markdown("""
-                - **Arquitetura**: LSTM 2 camadas
-                - **Features**: 16 indicadores técnicos
-                - **Período**: 60 dias de histórico
-                - **Hub**: [henriquebap/stock-predictor-lstm](https://huggingface.co/henriquebap/stock-predictor-lstm)
-                """)
+                <div style='background: rgba(26, 26, 46, 0.5); padding: 1rem; border-radius: 0.75rem; border: 1px solid #333;'>
+                    <h4 style='margin: 0 0 0.75rem 0; color: #667eea;'>🧠 Sobre o Modelo</h4>
+                    <ul style='margin: 0; padding-left: 1.5rem; color: #aaa; font-size: 0.9rem;'>
+                        <li><strong>Arquitetura:</strong> LSTM 2 camadas</li>
+                        <li><strong>Features:</strong> 16 indicadores técnicos</li>
+                        <li><strong>Período:</strong> 60 dias de histórico</li>
+                        <li><strong>Hub:</strong> <a href='https://huggingface.co/henriquebap/stock-predictor-lstm' 
+                            style='color: #667eea;' target='_blank'>HuggingFace 🤗</a></li>
+                    </ul>
+                </div>
+                """, unsafe_allow_html=True)
         else:
-            # Página inicial
-            st.info("👈 Selecione uma ação na barra lateral para começar")
+            # Página inicial melhorada
+            st.markdown("""
+            <div style='background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+                        padding: 2rem; border-radius: 1rem; text-align: center; margin: 2rem 0;'>
+                <h2 style='color: #667eea; margin: 0 0 1rem 0;'>👋 Bem-vindo ao Stock Predictor!</h2>
+                <p style='color: #aaa; font-size: 1.1rem; margin: 0;'>
+                    Selecione uma ação na barra lateral para começar<br>
+                    ou clique em uma das ações populares abaixo
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
             
-            # Mostrar ações populares
+            # Mostrar ações populares em grid bonito
             popular = get_popular_stocks()
             
-            st.subheader("📋 Ações Populares")
+            st.markdown("### 📋 Ações Mais Negociadas")
+            st.markdown("<br>", unsafe_allow_html=True)
             
             for category, symbols in popular.get('categories', {}).items():
-                st.markdown(f"**{category}**")
-                cols = st.columns(len(symbols))
+                st.markdown(f"""
+                <div style='background: linear-gradient(90deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+                            padding: 0.75rem 1rem; border-radius: 0.5rem; margin: 1rem 0;'>
+                    <h4 style='margin: 0; color: #888;'>{category}</h4>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                cols = st.columns(min(len(symbols), 4))
                 for i, sym in enumerate(symbols):
-                    with cols[i]:
-                        if st.button(sym, key=f"pop_{sym}"):
+                    with cols[i % len(cols)]:
+                        if st.button(f"📊 {sym}", key=f"pop_{sym}", use_container_width=True):
                             st.session_state['selected_symbol'] = sym
-                            st.session_state['force_update_input'] = True
                             st.rerun()
+                
+                st.markdown("<br>", unsafe_allow_html=True)
     
     # Footer
     st.markdown("---")

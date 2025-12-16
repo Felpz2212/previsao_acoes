@@ -11,6 +11,7 @@ from loguru import logger
 from services.stock_service import StockService
 from services.model_service import ModelService
 from services.monitoring import get_monitoring_service
+from services.ml_health import ml_health_monitor
 
 
 router = APIRouter()
@@ -125,6 +126,26 @@ async def get_prediction(request: Request, symbol: str):
                 logger.info(f"💾 Previsão salva no PostgreSQL")
             except Exception as e:
                 logger.warning(f"⚠️ Erro ao salvar previsão no DB: {e}")
+        
+        # Registrar no ML Health Monitor
+        try:
+            # Preparar features para logging
+            features = {
+                'close': current_price,
+                'ma_7': ma_7,
+                'ma_30': ma_30,
+                'volume': float(df['volume'].iloc[-1]) if 'volume' in df.columns else 0,
+                'volatility': float(df['close'].pct_change().std() * 100) if len(df) > 1 else 0
+            }
+            
+            ml_health_monitor.log_prediction(
+                symbol=resolved_symbol,
+                prediction=change_percent,
+                features=features
+            )
+            logger.debug(f"🧠 Previsão registrada no ML Health Monitor")
+        except Exception as e:
+            logger.warning(f"⚠️ Erro ao registrar em ML Health: {e}")
         
         response = PredictionResponse(
             symbol=resolved_symbol,
